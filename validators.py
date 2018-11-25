@@ -7,6 +7,7 @@ This module defines all kinds of validators that can be used to validate your fu
 from utils import iterable
 from itertools import islice
 from inspect import isclass
+from copy import copy
 
 
 class Validator:
@@ -20,21 +21,88 @@ class Validator:
         '''
         This method must be implemented by subclasses. It validates the given argument with the validator.
         :param arg: Is the argument to validate.
-        :return: True if the given argument is valid or not. False otherwise. When returning False, another value
-        can be returned (a string with a brief description that will indicate why the given arg is not valid)
+        :return: Something that evaluates to True if the given argument is valid or not.
+        Anything that evaluates to False otherwise. For the second case, it can be returned another value,
+        a string with a brief description that will indicate why the given arg is not valid
         '''
         raise NotImplementedError()
 
     def __str__(self):
         return self.__class__.__name__
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     @staticmethod
     def from_object(obj):
         if isinstance(obj, Validator):
             return obj
+
+        # Match any type...
         if type(obj) == object:
             return EmptyValidator()
-        return TypeValidator((obj, ))
+
+        # Classes and built-in types.
+        if isclass(obj):
+            return TypeValidator((obj,))
+
+        # Dictionaries
+        if isinstance(obj, dict):
+            return ValueValidator(obj)
+
+        # Callables
+        if callable(obj):
+            return UserValidator(obj)
+
+        # Range objects
+        if isinstance(obj, range):
+            return RangeValidator(obj)
+
+        # Iterables
+        if iterable(obj):
+            pass
+
+        # Default validator
+        return ValueValidator((obj,))
+
+
+class ValidatorWrapper(Validator):
+    '''
+    Tbis is used to wrap a validator (instances of this class are also validators).
+    It has the next properties:
+    - When the wrapped validator returns something that evaluates to True,
+    the wrapper returns a tuple of two values: True, None
+    - When the wrapped validator returns False, it returns False, None
+    - Finally if the wrapped one returns False plus a string value, it returns the same values.
+    '''
+    def __init__(self, wrapped):
+        if not isinstance(wrapped, Validator):
+            raise TypeError()
+        super().__init__()
+        self.wrapped = wrapped
+
+    def __call__(self, arg):
+        result = self.wrapped(arg)
+        if isinstance(result, (list, tuple)):
+            result = tuple(result)
+            if len(result) >= 2:
+                result = result[:3]
+            elif len(result) == 1:
+                result = result[0]
+            else:
+                result = None
+
+        if type(result) != tuple:
+            return bool(result), None
+        valid, error = result
+        return True if valid else valid, str(error)
+
+    def __str__(self):
+        return str(self.wrapped)
+
+    def __repr__(self):
+        return repr(self.wrapped)
+
 
 class TypeValidator(Validator):
     '''
@@ -151,3 +219,101 @@ class RangeValidator(Validator):
         if arg not in self.interval or (self.match_types and (type(arg) != int)):
             return False, 'Value in {} expected but got {}'.format(self.interval, arg)
         return True
+
+class UserValidator(Validator):
+    '''
+    Its a validator defined by the user.
+    '''
+    def __init__(self, predicate):
+        '''
+        Initializes this instance.
+        :param predicate: It must be a callable object which accepts the argument to be validated. The result must be
+        evaluated to True if the given argument is valid or something that evaluates to False otherwise.
+        '''
+        super().__init__()
+        if not callable(predicate):
+            raise TypeError()
+        self.predicate = predicate
+
+    def __call__(self, arg):
+        if not self.predicate(arg):
+            return False, 'Expression {}({}) evaluated to False'.format('', str(arg))
+        return True
+
+
+
+class ComposedValidator(Validator):
+    '''
+    This a kind of validator which are build grouping other validators. The given argument is valid when any of the
+    validators that are part of the group are evaluated to True. Otherwise, the argument is not valid.
+    '''
+    def __init__(self, items=()):
+        '''
+        Initializes this instance.
+        :param items: It can be a list of instances of class Validator.
+        '''
+        super().__init__()
+        self.validators = []
+        self.extend(items)
+
+    def add(self, item):
+        '''
+        Adds another validator.
+        :param item: The validator to add (must be an instance of class Validator)
+        '''
+        if not isinstance(item, Validator):
+            raise TypeError()
+        if isinstance(item, ComposedValidator):
+            self.extend(item)
+        else:
+            self.validators.append(ValidatorWrapper(item))
+
+    def extend(self, items):
+        '''
+        Add a few more validators to this composed validator
+        :param items: It must be an iterable where items must be instances of the class Validator
+        :return:
+        '''
+        if not iterable(items):
+            raise TypeError()
+        for item in items:
+            self.add(item)
+
+    def __copy__(self):
+        '''
+        Creates a copy of this instance.
+        :return: A clone of this object
+        '''
+        return ComposedValidator(self)
+
+    def __or__(self, other):
+        '''
+        Creates a new composed validator within the validators in this instance and another validator.
+        :param other:
+        :return:
+        '''
+        result = copy(self)
+        result |= other
+        return result
+
+    def __ior__(self, other):
+        '''
+        This is equivalent to method add() if the given argument is an instance of class Validator or
+        the method extend() if its a sequence of validators or another ComposedValidator object.
+        :param other: An instance of class Validator or an iterable of Validator objects.
+        '''
+        if isinstance(other, Validator):
+            self.add(other)
+        else:
+            self.extend(other)
+        return self
+
+    def __iter__(self):
+        return iter(self.validators)
+
+    def __call__(self, arg):
+        for validator in self:
+            valid, error = validator(arg)
+            if valid:
+                return True
+        return False
