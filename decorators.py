@@ -4,7 +4,7 @@ from inspect import signature, isclass
 from utils import iterable
 import types
 from types import MethodType
-from validators import Validator, EmptyValidator
+from validators import Validator, EmptyValidator, ValidatorWrapper
 from functools import update_wrapper
 
 class Processor:
@@ -130,35 +130,26 @@ class ParseOutput(Parser, Processor):
 
 
 class ValidateInput(ParseInput):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, items):
+        if not iterable(items) and not isinstance(items, Validator):
+            raise TypeError()
+        if isinstance(items, Validator) and not all(lambda item: isinstance(item, Validator), items):
+            raise TypeError()
+
+        if isinstance(items, Validator):
+            validator = items
+            super().__init__(ValidatorWrapper(validator))
+        else:
+            validators = map(ValidatorWrapper, items)
+            super().__init__(validators)
 
     def validate(self, *args):
-        for item, index, arg in zip(self.items, count(start=1), args):
-            try:
-                result = item(arg)
-                if isinstance(result, (list, tuple)):
-                    result = tuple(result)
-                    if len(result) >= 2:
-                        result = result[:3]
-                    elif len(result) == 1:
-                        result = result[0]
-                    else:
-                        result = None
-
-                if type(result) != tuple:
-                    valid = result
-                    if not valid:
-                        raise Exception()
-                else:
-                    valid, error = result
-                    if not valid:
-                        raise Exception(error)
-
-            except Exception as e:
+        for validator, index, arg in zip(self.items, count(start=1), args):
+            valid, error = validator(arg)
+            if not valid:
                 raise Exception('Invalid argument at position {}{}'.format(
-                    index,
-                    ': {}'.format(e) if len(str(e)) > 0 else ''))
+                index,
+                ': {}'.format(error) if error is not None else ''))
 
     def parse(self, *args):
         self.validate(*args)
