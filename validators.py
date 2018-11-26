@@ -21,8 +21,8 @@ class Validator:
         This method turns the validator to a callable object. It calls check(arg).
         If check(arg) returns something that evaluates to True, this function returns
         the tuple (True, None). This happens when the given argument is valid.
-        Otherwise, the tuple (False, error) is fetched (when the arg is invalid). Where 'error'
-        will be the value retrieved by the method error_message(arg)
+        Otherwise, the tuple (False, error) is retrieved (when the arg is invalid). Where 'error'
+        will be the value returned by the method error_message(arg)
         '''
         result = self.check(arg)
         if result:
@@ -54,7 +54,14 @@ class Validator:
         return self.__class__.__name__
 
     @staticmethod
-    def from_object(obj):
+    def from_spec(obj, recursive=True):
+        '''
+        Creates a validator instance using an object as specification. This is used to turn validate decorator arguments
+        into validator objects. Check the examples and test scripts to understand how this is done.
+        :param obj:
+        :param recursive:
+        :return:
+        '''
         if isinstance(obj, Validator):
             return obj
 
@@ -79,8 +86,8 @@ class Validator:
             return RangeValidator(obj)
 
         # Iterables
-        if iterable(obj):
-            pass
+        if iterable(obj) and recursive:
+            return ComposedValidator([Validator.from_spec(item, recursive=False) for item in obj])
 
         # Default validator
         return ValueValidator((obj,))
@@ -295,6 +302,10 @@ class ComposedValidator(Validator):
         return self
 
     def __iter__(self):
+        '''
+        It allows this instance to be iterable.
+        :return: Returns an iterator that walks through all the validators that are part of this composed validator object.
+        '''
         return iter(self.validators)
 
     def check(self, arg):

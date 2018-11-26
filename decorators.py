@@ -178,7 +178,7 @@ class ValidateInputDecorator(Decorator):
     empty_arg = EmptyValidator()
 
     def create_processor(self, *args):
-        return ValidateInput(map(Validator.from_object, args))
+        return ValidateInput(map(Validator.from_spec, args))
 
 
 class ParseInputDecorator(Decorator):
