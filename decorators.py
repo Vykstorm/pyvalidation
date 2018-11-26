@@ -135,7 +135,8 @@ class ValidateInput(ParseInput):
             raise TypeError()
         if isinstance(items, Validator) and not all(map(lambda item: isinstance(item, Validator), items)):
             raise TypeError()
-        super().__init__(items)
+        validators = items
+        super().__init__([validator.simplify() for validator in validators])
 
     def validate(self, *args):
         for validator, index, arg in zip(self.items, count(start=1), args):

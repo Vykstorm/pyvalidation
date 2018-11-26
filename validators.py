@@ -47,11 +47,33 @@ class Validator:
         '''
         return ''
 
+    def __or__(self, other):
+        '''
+        Method that merges or joins two validators to create a composed one. This allows operator '|' to be used
+        between validators.
+        c = a | b validator is more inclusive than a or b.
+        It means that, if X,Y are sets of arguments that are valid within a and b validators, the arguments
+        that will be valid within the validator c is the union between such sets: X u Y
+        :return: An instance of class validator.
+        '''
+        if not isinstance(other, Validator):
+            raise TypeError()
+        return ComposedValidator((self, other))
+
+    def simplify(self):
+        '''
+        This method returns an equivalent validator of this instance and is used to optimize validation stage
+        (the returned validator maybe more faster checking the arguments than this instance but both of them are still equivalent)
+        This maybe overriden by subclasses, by default returns self
+        :return: Another validator object.
+        '''
+        return self
+
     def __str__(self):
         return self.__class__.__name__
 
     def __repr__(self):
-        return self.__class__.__name__
+        return str(self)
 
     @staticmethod
     def from_spec(obj, recursive=True):
@@ -144,6 +166,32 @@ class TypeValidator(Validator):
             ' or '.join([cls.__name__ for cls in self.types]),
             type(arg).__name__)
 
+    def __or__(self, other):
+        if not isinstance(other, Validator):
+            raise TypeError()
+        if isinstance(other, (EmptyValidator, ComposedValidator)):
+            return other | self
+
+        if isinstance(other, TypeValidator):
+            if not ((self.check_subclasses ^ other.check_subclasses) or (self.check_bool_subclasses ^ other.check_bool_subclasses)):
+                return TypeValidator(frozenset(self.types + other.types), self.check_subclasses, self.check_bool_subclasses)
+            return super().__or__(other)
+
+        if isinstance(other, ValueValidator):
+            return copy(self) if all([self.check(value) for value in other.values]) else super().__or__(other)
+
+        if isinstance(other, RangeValidator):
+            return copy(self) if int in self.types else super().__or__(other)
+
+        return super().__or__(other)
+
+    def simplify(self):
+        if self.check_subclasses and (object in self.types):
+            return EmptyValidator()
+        return self
+
+    def __str__(self):
+        return 'type validator: {}'.format(', '.join([cls.__name__ for cls in self.types]))
 
 class ValueValidator(Validator):
     '''
@@ -174,6 +222,20 @@ class ValueValidator(Validator):
             ' or '.join([str(value) for value in self.values]),
             str(arg))
 
+    def __or__(self, other):
+        if not isinstance(other, Validator):
+            raise TypeError()
+        if isinstance(other, (EmptyValidator, ComposedValidator, TypeValidator, RangeValidator)):
+            return other | self
+        if isinstance(other, ValueValidator):
+            if not(self.match_types ^ other.match_types):
+                return ValueValidator(self.values + other.values, self.match_types)
+            return super().__or__(other)
+        return super().__or__(other)
+
+    def __str__(self):
+        return 'value validator: {}'.format(', '.join([str(value) for value in self.values]))
+
 
 class EmptyValidator(Validator):
     '''
@@ -183,6 +245,16 @@ class EmptyValidator(Validator):
     def check(self, arg):
         return True
 
+    def __or__(self, other):
+        if not isinstance(other, Validator):
+            raise TypeError()
+        return copy(self)
+
+    def __copy__(self):
+        return self
+
+    def __str__(self):
+        return "empty validator"
 
 class RangeValidator(Validator):
     '''
@@ -212,6 +284,15 @@ class RangeValidator(Validator):
     def error_message(self, arg):
         return 'Value in {} expected but got {}'.format(self.interval, arg)
 
+    def __or__(self, other):
+        if not isinstance(other, Validator):
+            raise TypeError()
+        if isinstance(other, (EmptyValidator, ComposedValidator, TypeValidator)):
+            return other | self
+        return super().__or__(other)
+
+    def __str__(self):
+        return 'range validator: {}'.format(self.interval)
 
 class UserValidator(Validator):
     '''
@@ -233,6 +314,19 @@ class UserValidator(Validator):
 
     def error_message(self, arg):
         return 'Expression {}({}) evaluated to False'.format('', str(arg))
+
+    def __or__(self, other):
+        if not isinstance(other, Validator):
+            raise TypeError()
+        if isinstance(other, (EmptyValidator, ComposedValidator, TypeValidator, RangeValidator)):
+            return other | self
+        if isinstance(other, UserValidator):
+            return UserValidator(lambda arg: self.func(arg) and other.func(arg))
+        return super().__or__(other)
+
+    def __str__(self):
+        # TODO
+        return 'user validator: {}'.format('')
 
 
 class ComposedValidator(Validator):
@@ -308,8 +402,18 @@ class ComposedValidator(Validator):
         '''
         return iter(self.validators)
 
+    def __len__(self):
+        return len(self.validators)
+
     def check(self, arg):
         for validator in self:
             if validator.check(arg):
                 return True
         return False
+
+    def simplify(self):
+        return self
+
+    def __str__(self):
+        return ' | '.join([str(validator) for validator in self])
+
