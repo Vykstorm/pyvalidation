@@ -5,7 +5,6 @@ This module defines all kinds of validators that can be used to validate your fu
 
 
 from utils import iterable
-from itertools import islice
 from inspect import isclass
 from copy import copy
 
@@ -19,13 +18,34 @@ class Validator:
 
     def __call__(self, arg):
         '''
+        This method turns the validator to a callable object. It calls check(arg).
+        If check(arg) returns something that evaluates to True, this function returns
+        the tuple (True, None). This happens when the given argument is valid.
+        Otherwise, the tuple (False, error) is fetched (when the arg is invalid). Where 'error'
+        will be the value retrieved by the method error_message(arg)
+        '''
+        result = self.check(arg)
+        if result:
+            return True, None
+        return False, self.error_message(arg)
+
+    def check(self, arg):
+        '''
         This method must be implemented by subclasses. It validates the given argument with the validator.
         :param arg: Is the argument to validate.
         :return: Something that evaluates to True if the given argument is valid or not.
-        Anything that evaluates to False otherwise. For the second case, it can be returned another value,
-        a string with a brief description that will indicate why the given arg is not valid
+        Anything that evaluates to False otherwise.
         '''
         raise NotImplementedError()
+
+    def error_message(self, arg):
+        '''
+        Retrieves an error message; A brief description explaining why the given argument is not valid.
+        This method may be overriden by subclasses
+        :param arg:
+        :return: Returns a string value, the error message.
+        '''
+        return ''
 
     def __str__(self):
         return self.__class__.__name__
@@ -65,43 +85,6 @@ class Validator:
         # Default validator
         return ValueValidator((obj,))
 
-
-class ValidatorWrapper(Validator):
-    '''
-    Tbis is used to wrap a validator (instances of this class are also validators).
-    It has the next properties:
-    - When the wrapped validator returns something that evaluates to True,
-    the wrapper returns a tuple of two values: True, None
-    - When the wrapped validator returns False, it returns False, None
-    - Finally if the wrapped one returns False plus a string value, it returns the same values.
-    '''
-    def __init__(self, wrapped):
-        if not isinstance(wrapped, Validator):
-            raise TypeError()
-        super().__init__()
-        self.wrapped = wrapped
-
-    def __call__(self, arg):
-        result = self.wrapped(arg)
-        if isinstance(result, (list, tuple)):
-            result = tuple(result)
-            if len(result) >= 2:
-                result = result[:3]
-            elif len(result) == 1:
-                result = result[0]
-            else:
-                result = None
-
-        if type(result) != tuple:
-            return bool(result), None
-        valid, error = result
-        return True if valid else valid, str(error)
-
-    def __str__(self):
-        return str(self.wrapped)
-
-    def __repr__(self):
-        return repr(self.wrapped)
 
 
 class TypeValidator(Validator):
@@ -143,16 +126,14 @@ class TypeValidator(Validator):
         self.check_subclasses = check_subclasses
         self.check_bool_subclasses = check_bool_subclasses
 
-    def __call__(self, arg):
+    def check(self, arg):
         cls = type(arg)
         if not self.check_subclasses or (not self.check_bool_subclasses and cls == bool):
-            valid = cls in self.types
-        else:
-            valid = isinstance(arg, self.types)
+            return cls in self.types
+        return isinstance(arg, self.types)
 
-        if valid:
-            return True
-        return False, 'Type {} expected but got {}'.format(
+    def error_message(self, arg):
+        return 'Type {} expected but got {}'.format(
             ' or '.join([cls.__name__ for cls in self.types]),
             type(arg).__name__)
 
@@ -175,11 +156,14 @@ class ValueValidator(Validator):
         self.values = tuple(values)
         self.match_types = match_types
 
-    def __call__(self, arg):
+    def check(self, arg):
         for value in self.values:
             if arg == value and (not self.match_types or (type(arg) == type(value))):
                 return True
-        return False, 'Value {} expected but got {}'.format(
+        return False
+
+    def error_message(self, arg):
+        return 'Value {} expected but got {}'.format(
             ' or '.join([str(value) for value in self.values]),
             str(arg))
 
@@ -189,7 +173,7 @@ class EmptyValidator(Validator):
     This is a special validator. Is an "empty" validator because all given arguments will pass
     its validation stage.
     '''
-    def __call__(self, arg):
+    def check(self, arg):
         return True
 
 
@@ -215,31 +199,33 @@ class RangeValidator(Validator):
         self.interval = interval
         self.match_types = match_types
 
-    def __call__(self, arg):
-        if arg not in self.interval or (self.match_types and (type(arg) != int)):
-            return False, 'Value in {} expected but got {}'.format(self.interval, arg)
-        return True
+    def check(self, arg):
+        return arg in self.interval and ((not self.match_types) or (type(arg) == int))
+
+    def error_message(self, arg):
+        return 'Value in {} expected but got {}'.format(self.interval, arg)
+
 
 class UserValidator(Validator):
     '''
     Its a validator defined by the user.
     '''
-    def __init__(self, predicate):
+    def __init__(self, func):
         '''
         Initializes this instance.
         :param predicate: It must be a callable object which accepts the argument to be validated. The result must be
         evaluated to True if the given argument is valid or something that evaluates to False otherwise.
         '''
         super().__init__()
-        if not callable(predicate):
+        if not callable(func):
             raise TypeError()
-        self.predicate = predicate
+        self.func = func
 
-    def __call__(self, arg):
-        if not self.predicate(arg):
-            return False, 'Expression {}({}) evaluated to False'.format('', str(arg))
-        return True
+    def check(self, arg):
+        return self.func(arg)
 
+    def error_message(self, arg):
+        return 'Expression {}({}) evaluated to False'.format('', str(arg))
 
 
 class ComposedValidator(Validator):
@@ -266,7 +252,7 @@ class ComposedValidator(Validator):
         if isinstance(item, ComposedValidator):
             self.extend(item)
         else:
-            self.validators.append(ValidatorWrapper(item))
+            self.validators.append(item)
 
     def extend(self, items):
         '''
@@ -311,9 +297,8 @@ class ComposedValidator(Validator):
     def __iter__(self):
         return iter(self.validators)
 
-    def __call__(self, arg):
+    def check(self, arg):
         for validator in self:
-            valid, error = validator(arg)
-            if valid:
+            if validator.check(arg):
                 return True
         return False

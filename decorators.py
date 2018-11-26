@@ -4,7 +4,7 @@ from inspect import signature, isclass
 from utils import iterable
 import types
 from types import MethodType
-from validators import Validator, EmptyValidator, ValidatorWrapper
+from validators import Validator, EmptyValidator
 from functools import update_wrapper
 
 class Processor:
@@ -133,23 +133,17 @@ class ValidateInput(ParseInput):
     def __init__(self, items):
         if not iterable(items) and not isinstance(items, Validator):
             raise TypeError()
-        if isinstance(items, Validator) and not all(lambda item: isinstance(item, Validator), items):
+        if isinstance(items, Validator) and not all(map(lambda item: isinstance(item, Validator), items)):
             raise TypeError()
-
-        if isinstance(items, Validator):
-            validator = items
-            super().__init__(ValidatorWrapper(validator))
-        else:
-            validators = map(ValidatorWrapper, items)
-            super().__init__(validators)
+        super().__init__(items)
 
     def validate(self, *args):
         for validator, index, arg in zip(self.items, count(start=1), args):
             valid, error = validator(arg)
             if not valid:
                 raise Exception('Invalid argument at position {}{}'.format(
-                index,
-                ': {}'.format(error) if error is not None else ''))
+                    index,
+                    ': {}'.format(error) if len(error) > 0 is not None else ''))
 
     def parse(self, *args):
         self.validate(*args)
