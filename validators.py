@@ -6,7 +6,7 @@ This module defines all kinds of validators that can be used to validate your fu
 
 from utils import iterable
 from inspect import isclass
-from itertools import combinations
+from itertools import combinations, islice
 from copy import copy
 
 
@@ -149,10 +149,12 @@ class TypeValidator(Validator):
         if not isinstance(check_bool_subclasses, bool):
             raise TypeError()
 
-        super().__init__()
-
         types = tuple(frozenset(types))
-        self.types = tuple(types)
+        if len(types) == 0:
+            raise ValueError()
+
+        super().__init__()
+        self.types = types
         self.check_subclasses = check_subclasses
         self.check_bool_subclasses = check_bool_subclasses
 
@@ -194,6 +196,7 @@ class TypeValidator(Validator):
     def __str__(self):
         return 'type validator: {}'.format(', '.join([cls.__name__ for cls in self.types]))
 
+
 class ValueValidator(Validator):
     '''
     This is a validator that checks if the given arguments has a valid value.
@@ -209,7 +212,11 @@ class ValueValidator(Validator):
         super().__init__()
         if not iterable(values):
             raise TypeError()
-        self.values = tuple(values)
+        values = tuple(values)
+        if len(values) == 0:
+            raise ValueError()
+
+        self.values = values
         self.match_types = match_types
 
     def check(self, arg):
@@ -236,7 +243,15 @@ class ValueValidator(Validator):
 
     def simplify(self):
         try:
-            return ValueValidator(frozenset(self.values), self.match_types)
+            values = frozenset(self.values)
+            if len(values) > 2 and all(map(lambda value: type(value) == int, values)):
+                values = sorted(values)
+                differences = [x-y for x, y in zip(islice(values, 1, len(values)), islice(values, 0, len(values)-1))]
+                if len(frozenset(differences)) == 1:
+                    step = next(iter(differences))
+                    return RangeValidator(range(values[0], values[-1]+1, step))
+
+            return ValueValidator(values, self.match_types)
         except:
             pass
         return self
@@ -263,6 +278,7 @@ class EmptyValidator(Validator):
 
     def __str__(self):
         return "empty validator"
+
 
 class RangeValidator(Validator):
     '''
@@ -367,7 +383,7 @@ class ComposedValidator(Validator):
         if isinstance(item, ComposedValidator):
             self.extend(item)
         else:
-            self.validators.append(item)
+            self.validators.append(item.simplify())
 
     def extend(self, items):
         '''
@@ -428,7 +444,7 @@ class ComposedValidator(Validator):
     def simplify(self):
         validators = self.validators
         if len(validators) == 1:
-            return next(iter(validators)).simplify()
+            return next(iter(validators))
 
         if len(validators) <= 8:
             for a, b in combinations(validators, 2):
@@ -439,9 +455,7 @@ class ComposedValidator(Validator):
                     validators.remove(b)
                     validators.append(c)
                     return ComposedValidator(validators).simplify()
-
-        k = len(validators) // 2
-        return ComposedValidator(validators[:k]).simplify() | ComposedValidator(validators[k:]).simplify()
+        return self
 
     def __str__(self):
         return ' | '.join([str(validator) for validator in self])
