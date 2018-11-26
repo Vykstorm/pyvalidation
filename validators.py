@@ -6,6 +6,7 @@ This module defines all kinds of validators that can be used to validate your fu
 
 from utils import iterable
 from inspect import isclass
+from itertools import combinations
 from copy import copy
 
 
@@ -233,6 +234,13 @@ class ValueValidator(Validator):
             return super().__or__(other)
         return super().__or__(other)
 
+    def simplify(self):
+        try:
+            return ValueValidator(frozenset(self.values), self.match_types)
+        except:
+            pass
+        return self
+
     def __str__(self):
         return 'value validator: {}'.format(', '.join([str(value) for value in self.values]))
 
@@ -340,6 +348,12 @@ class ComposedValidator(Validator):
         :param items: It can be a list of instances of class Validator.
         '''
         super().__init__()
+        if not iterable(items):
+            raise TypeError()
+        items = tuple(items)
+        if len(items) == 0:
+            raise ValueError()
+
         self.validators = []
         self.extend(items)
 
@@ -412,7 +426,22 @@ class ComposedValidator(Validator):
         return False
 
     def simplify(self):
-        return self
+        validators = self.validators
+        if len(validators) == 1:
+            return next(iter(validators)).simplify()
+
+        if len(validators) <= 8:
+            for a, b in combinations(validators, 2):
+                c = a | b
+                if not isinstance(c, ComposedValidator) or len(c) <= 1:
+                    validators = copy(validators)
+                    validators.remove(a)
+                    validators.remove(b)
+                    validators.append(c)
+                    return ComposedValidator(validators).simplify()
+
+        k = len(validators) // 2
+        return ComposedValidator(validators[:k]).simplify() | ComposedValidator(validators[k:]).simplify()
 
     def __str__(self):
         return ' | '.join([str(validator) for validator in self])
