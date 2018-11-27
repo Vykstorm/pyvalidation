@@ -1,8 +1,7 @@
 
-from itertools import count, chain, repeat, islice
-from inspect import signature, isclass
+from itertools import count
+from inspect import signature
 from utils import iterable
-import types
 from types import MethodType
 from validators import Validator, EmptyValidator
 from functools import update_wrapper
@@ -140,7 +139,7 @@ class ValidateInput(ParseInput):
         if isinstance(items, Validator) and not all(map(lambda item: isinstance(item, Validator), items)):
             raise TypeError()
         validators = items
-        super().__init__([validator for validator in validators])
+        super().__init__([validator.simplify() for validator in validators])
 
     def validate(self, *args):
         for validator, index, arg in zip(self.items, count(start=1), args):
