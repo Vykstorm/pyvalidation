@@ -64,18 +64,10 @@ class Validator:
         return str(self)
 
     @staticmethod
-    def from_spec(obj, disjunctive_iterable=True):
+    def from_spec(obj):
         '''
         Creates a validator instance using an object as specification. This is used to turn validate decorator arguments
         into validator objects. Check the examples and test scripts to understand how this is done.
-        :param obj:
-        :param disjunctive_iterable: This argument has only effect if obj is an iterable object
-        (neither a callable, class, range or dict).
-        When True, it indicates that items inside the iterable must be parsed separately. The result will be a list of validator
-        objects (one per item). The returned value will be a ComposedValidator which contains all such validators.
-        If is set to False, it is treated as a regular object value. The returned validator will be:
-        ValueValidator((obj, ))
-        :return:
         '''
         if isinstance(obj, Validator):
             return obj
@@ -100,9 +92,9 @@ class Validator:
         if isinstance(obj, range):
             return RangeValidator(obj)
 
-        # Iterables
-        if iterable(obj) and disjunctive_iterable:
-            return ComposedValidator([Validator.from_spec(item, disjunctive_iterable=False) for item in obj])
+        # Iterables (only list, tuples, frozensets and sets)
+        if isinstance(obj, (list, tuple, set, frozenset)):
+            return ComposedValidator([Validator.from_spec(item) for item in obj])
 
         # Default validator
         return ValueValidator((obj,))
