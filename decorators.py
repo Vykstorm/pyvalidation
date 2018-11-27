@@ -1,5 +1,5 @@
 
-from itertools import count, chain, repeat
+from itertools import count, chain, repeat, islice
 from inspect import signature, isclass
 from utils import iterable
 import types
@@ -92,12 +92,16 @@ class Wrapper(ProcessorBundle):
 
 class Parser:
     def __init__(self, items):
-        if not iterable(items) and not callable(items):
+        if not iterable(items):
             raise TypeError()
-
-        self.items = chain(items, repeat(lambda arg: arg)) if iterable(items) else repeat(items)
+        if not all(map(lambda item: callable(item), items)):
+            raise TypeError()
+        self.items = tuple(items)
 
     def parse(self, *args):
+        if len(self.items) != len(args):
+            raise ValueError()
+
         result = []
         for item, index, arg in zip(self.items, count(start=1), args):
             try:
@@ -136,7 +140,7 @@ class ValidateInput(ParseInput):
         if isinstance(items, Validator) and not all(map(lambda item: isinstance(item, Validator), items)):
             raise TypeError()
         validators = items
-        super().__init__([validator.simplify() for validator in validators])
+        super().__init__([validator for validator in validators])
 
     def validate(self, *args):
         for validator, index, arg in zip(self.items, count(start=1), args):
@@ -147,6 +151,8 @@ class ValidateInput(ParseInput):
                     ': {}'.format(error) if len(error) > 0 is not None else ''))
 
     def parse(self, *args):
+        if len(self.items) != len(args):
+            raise ValueError()
         self.validate(*args)
         return args
 
