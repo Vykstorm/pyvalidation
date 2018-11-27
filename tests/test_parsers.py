@@ -14,7 +14,7 @@ class TestParsers(TestCase):
     Set of tests to check features of decorator parse()
     '''
 
-    def test_emptyparser(self):
+    def test_empty_parser(self):
         '''
         Tests that when None value is indicated as a parser to process some input value, it just acts like an empty
         parser.
