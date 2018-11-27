@@ -42,12 +42,12 @@ class TestDecorators(TestCase):
             @classmethod
             @validate(object, int, int, float)
             def foo(cls, x, y, z):
-                self.assertTrue(cls is Qux)
+                self.assertIs(cls, Qux)
 
             @classmethod
             @parse(None, float, float, float)
             def bar(cls, x, y, z):
-                self.assertTrue(cls is Qux)
+                self.assertIs(cls, Qux)
 
         Qux.foo(1, 2, 3.0)
         Qux.bar(1.0, 2.0, 3.0)
@@ -62,11 +62,11 @@ class TestDecorators(TestCase):
         class Qux:
             @validate(object, int, int, float)
             def foo(obj, x, y, z):
-                self.assertTrue(isinstance(obj, Qux))
+                self.assertIsInstance(obj, Qux)
 
             @parse(None, float, float, float)
             def bar(obj, x, y, z):
-                self.assertTrue(isinstance(obj, Qux))
+                self.assertIsInstance(obj, Qux)
 
         Qux().foo(1, 1, 2.0)
         Qux().bar(1, 1, 1)
@@ -82,14 +82,14 @@ class TestDecorators(TestCase):
         def foo(x, y, z):
             pass
 
-        self.assertTrue(isinstance(foo, Wrapper))
+        self.assertIsInstance(foo, Wrapper)
         foo(1, 1, 1.0)
 
         @parse(str, str, str)
         def bar(x, y, z):
             pass
 
-        self.assertTrue(isinstance(bar, Wrapper))
+        self.assertIsInstance(foo, Wrapper)
         bar('Hello', 'my', 'friend')
 
 
