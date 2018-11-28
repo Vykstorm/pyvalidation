@@ -48,7 +48,7 @@ class ProcessorBundle(Processor):
         self.processors.append(processor)
 
     def process_input(self, *args):
-        for level, processor in zip(count(start=1), reversed(self.processors)):
+        for level, processor in zip(count(start=0), reversed(self.processors)):
             try:
                 args = processor.process_input(*args)
             except ParsingError as e:
@@ -58,14 +58,13 @@ class ProcessorBundle(Processor):
         return args
 
     def process_output(self, *args):
-        for level, processor in zip(map(lambda x: len(self.processors) - x + 1, count(start=1)),
+        for level, processor in zip(map(lambda x: len(self.processors) - x + 1, count(start=0)),
                                     self.processors):
             try:
                 args = processor.process_output(*args)
-            except Exception as e:
+            except ParsingError as e:
                 if len(self.processors) > 1:
-                    # TODO
-                    raise Exception('{} (at level {})'.format(e, level))
+                    e.level = level
                 raise e
         return args
 
