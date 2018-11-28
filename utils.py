@@ -3,9 +3,6 @@
 This module provides helper routines for the rest of the modules in this library.
 '''
 
-from inspect import signature, Signature, getcallargs
-from functools import partial
-
 def iterable(x):
     '''
     Checks if an object is iterable or not.
