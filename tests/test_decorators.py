@@ -143,7 +143,7 @@ class TestDecorators(TestCase):
         self.assertEqual(repr(foo), repr(bar))
 
 
-    def test_keyword_arguments(self):
+    def test_kwargs(self):
         '''
         Test if decorator accepts either positional and keyword argumnents.
         :return:
@@ -168,7 +168,7 @@ class TestDecorators(TestCase):
 
     def test_default_values(self):
         '''
-        Test if method with default values can be decorated using parse() and validate() decorators
+        Test if a method with default values can be decorated using parse() and validate() decorators
         :return:
         '''
 
