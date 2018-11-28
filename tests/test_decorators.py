@@ -3,9 +3,7 @@
 import unittest
 from unittest import TestCase
 
-from validation import validate
-from parsing import parse
-from decorators import Wrapper
+from decorators import validate, parse, Wrapper
 
 
 class TestDecorators(TestCase):
