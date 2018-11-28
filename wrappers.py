@@ -10,10 +10,11 @@ from utils import iterable
 from types import MethodType
 
 
-class Wrapper(ProcessorBundle):
+class FuncWrapper(ProcessorBundle):
     '''
-    A instance of this class encapsulates a method (Acts like a function wrapper)
-    wrappers
+    An instance of this class encapsulates a method:
+    When invoke, It can process input argument values before calling the wrapped method.
+    Layer, the function is called and its output values are processed (it will be then returned by the wrapper call)
     '''
     def __init__(self, func):
         '''

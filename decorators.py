@@ -6,7 +6,7 @@ validate is an alias of ValidateInputDecorator class, and parse is an alias of P
 from inspect import signature
 from validators import Validator
 from processors import ValidateInput, ParseInput, ParseOutput
-from wrappers import Wrapper
+from wrappers import FuncWrapper
 
 
 class Decorator:
@@ -40,7 +40,7 @@ class Decorator:
         bounded_args.apply_defaults()
 
         processor = self.create_processor(*bounded_args.args)
-        wrapper = Wrapper(f) if not isinstance(f, Wrapper) else f
+        wrapper = FuncWrapper(f) if not isinstance(f, FuncWrapper) else f
         wrapper.append(processor)
         return wrapper
 

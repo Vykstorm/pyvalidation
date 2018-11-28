@@ -3,7 +3,7 @@
 import unittest
 from unittest import TestCase
 
-from decorators import validate, parse, Wrapper
+from decorators import validate, parse, FuncWrapper
 
 
 class TestDecorators(TestCase):
@@ -81,14 +81,14 @@ class TestDecorators(TestCase):
         def foo(x, y, z):
             pass
 
-        self.assertIsInstance(foo, Wrapper)
+        self.assertIsInstance(foo, FuncWrapper)
         foo(1, 1, 1.0)
 
         @parse(str, str, str)
         def bar(x, y, z):
             pass
 
-        self.assertIsInstance(foo, Wrapper)
+        self.assertIsInstance(foo, FuncWrapper)
         bar('Hello', 'my', 'friend')
 
 
