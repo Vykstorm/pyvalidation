@@ -16,6 +16,6 @@ if __name__ == '__main__':
         python_requires = '>=2.7',
         install_requires = [],
         dependency_links = [],
-        py_modules= ['validation', 'parsing'],
+        py_modules= ['vpfargs'],
         keywords = ['validation', 'parsing', 'decorators']
     )
