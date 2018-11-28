@@ -84,6 +84,9 @@ class Wrapper(ProcessorBundle):
         :param func: Must be a callable object. A regular function, lambda or a class object with the instance method
         __call__
         '''
+        if not callable(func):
+            raise TypeError()
+        
         super().__init__()
         self.wrapped_func = func
         self.signature = signature(func, follow_wrapped=True)
@@ -251,9 +254,11 @@ class Decorator:
         if not callable(f):
             raise TypeError()
 
+        args, kwargs = self.args, self.kwargs
+
         s = signature(f, follow_wrapped=True)
         s = s.replace(parameters=[param.replace(default=self.empty_arg) for param in s.parameters.values()])
-        bounded_args = s.bind(*self.args, **self.kwargs)
+        bounded_args = s.bind(*args, **kwargs)
         bounded_args.apply_defaults()
 
         processor = self.create_processor(*bounded_args.args)
@@ -269,7 +274,7 @@ class ValidateInputDecorator(Decorator):
     '''
     A decorator to add input values validation feature.
     '''
-    empty_arg = EmptyValidator()
+    empty_arg = object
 
     def create_processor(self, *args):
         return ValidateInput(map(Validator.from_spec, args))
