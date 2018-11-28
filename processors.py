@@ -93,6 +93,11 @@ class Parse:
         result = []
         for item, index, arg in zip(self.items, count(start=0), args):
             try:
+                if isinstance(arg, InputValueWrapper):
+                    if not arg.parse:
+                        result.append(arg)
+                        continue
+                    arg = arg.wrapped_value
                 result.append(item(arg))
             except Exception as e:
                 raise ParsingError(index, str(e))
@@ -142,6 +147,10 @@ class ValidateInput(ParseInput):
 
     def validate(self, *args):
         for validator, index, arg in zip(self.items, count(start=0), args):
+            if isinstance(arg, InputValueWrapper):
+                if not arg.validate:
+                    continue
+                arg = arg.wrapped_value
             valid, error = validator(arg)
             if not valid:
                 raise ValidationError(index, error)
@@ -151,3 +160,6 @@ class ValidateInput(ParseInput):
             raise ValueError()
         self.validate(*args)
         return args
+
+# This import is written here because of cyclic import issues
+from wrappers import InputValueWrapper

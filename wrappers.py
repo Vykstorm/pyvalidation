@@ -29,7 +29,8 @@ class FuncWrapper(ProcessorBundle):
         self.wrapped_func = func
         s = signature(func, follow_wrapped=True)
         s = s.replace(parameters=[param.replace(
-            default=InputValueWrapper(param) if param.default != Parameter.empty else param.default) for param in s.parameters.values()])
+            default=InputValueWrapper(param.default, validate=False, parse=False) if param.default != Parameter.empty else param.default)
+            for param in s.parameters.values()])
         self.signature = s
 
         update_wrapper(self, func) # This method sets some attributes to introspect the wrapper object like __qualname__
@@ -74,6 +75,10 @@ class FuncWrapper(ProcessorBundle):
             return None
         return tuple(output) if len(output) > 1 else next(iter(output))
 
+    def process_input(self, *args):
+        args = super().process_input(*args)
+        return tuple([arg if not isinstance(arg, InputValueWrapper) else arg.wrapped_value for arg in args])
+
     def __get__(self, instance, owner):
         '''
         Turns instances of this class to non-data descriptors. This is used when this class is returned when decorating
@@ -114,12 +119,12 @@ class InputValueWrapper:
         if not isinstance(parse, bool):
             raise TypeError()
 
-        self.value = value
+        self.wrapped_value = value
         self.validate = validate
         self.parse = parse
 
     def __str__(self):
-        return str(self.value)
+        return str(self.wrapped_value)
 
     def __repr__(self):
-        return repr(self.value)
+        return repr(self.wrapped_value)
