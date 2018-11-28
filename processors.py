@@ -75,9 +75,9 @@ class ProcessorBundle(Processor):
 
 
 
-class Parser:
+class Parse:
     '''
-    Base class for InputParser and OutputParser
+    Base class for ParseInput and ParseOutput
     '''
     def __init__(self, items):
         if not iterable(items):
@@ -100,25 +100,25 @@ class Parser:
 
 
 
-class ParseInput(Parser, Processor):
+class ParseInput(Parse, Processor):
     '''
     Represents a processor which parses inputs values with the given items.
     '''
     def __init__(self, items):
         Processor.__init__(self)
-        Parser.__init__(self, items)
+        Parse.__init__(self, items)
 
     def process_input(self, *args):
         return self.parse(*args)
 
 
-class ParseOutput(Parser, Processor):
+class ParseOutput(Parse, Processor):
     '''
     Represents a processor which parses output values with the given items.
     '''
     def __init__(self, items):
         Processor.__init__(self)
-        Parser.__init__(self, items)
+        Parse.__init__(self, items)
 
     def process_output(self, *args):
         return self.parse(*args)
