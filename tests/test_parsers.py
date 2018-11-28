@@ -7,7 +7,7 @@ from re import match, fullmatch
 from math import floor, ceil
 
 from decorators import parse
-
+from exceptions import ParsingError
 
 class TestParsers(TestCase):
     '''
@@ -82,6 +82,32 @@ class TestParsers(TestCase):
         self.assertEqual(foo(1), 7)
         self.assertEqual(foo(2), 8)
         self.assertEqual(foo(3), 10)
+
+
+    def test_default_values(self):
+        '''
+        Arguments with default values defined by the wrapped functions are not parsed. This test check if this is done correctly.
+        :return:
+        '''
+
+        @parse(partial(int.__add__, 1), partial(int.__mul__, 10))
+        def foo(x=1, y=1):
+            self.assertEqual(x, 1)
+            self.assertEqual(y, 1)
+        foo()
+
+
+    def test_exceptions(self):
+        '''
+        All exceptions raised due to parsing errors are instances of ParsingError class
+        :return:
+        '''
+        @parse(int)
+        def foo(x):
+            pass
+
+        with self.assertRaises(ParsingError):
+            foo('Hello World!')
 
 if __name__ == '__main__':
     unittest.main()
