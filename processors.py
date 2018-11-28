@@ -1,5 +1,5 @@
 '''
-This module defines the classes Processor, ProcessorBundle, ValidateInput, ParseInput and ParseOutput
+This module defines the classes Processor, ProcessorBundle, ValidateInput and ParseInput
 '''
 
 from utils import iterable
@@ -9,7 +9,7 @@ from validators import Validator
 
 class Processor:
     '''
-    Represents an object bounded to an arbitrary function which can process its input and output values.
+    Represents an object bounded to an arbitrary function which can process its input values.
     '''
     def process_input(self, *args):
         '''
@@ -19,14 +19,6 @@ class Processor:
         '''
         return args
 
-    def process_output(self, *args):
-        '''
-        Process output values. Should be implemented by subclasses.
-        :param args: The output values to be processed.
-        :return: Returns a tuple with the processed output values. Must have the same size as the number of output values
-        indicated.
-        '''
-        return args
 
 
 class ProcessorBundle(Processor):
@@ -57,21 +49,10 @@ class ProcessorBundle(Processor):
                 raise e
         return args
 
-    def process_output(self, *args):
-        for level, processor in zip(map(lambda x: len(self.processors) - x + 1, count(start=0)),
-                                    self.processors):
-            try:
-                args = processor.process_output(*args)
-            except ParsingError as e:
-                if len(self.processors) > 1:
-                    e.level = level
-                raise e
-        return args
 
     def __iadd__(self, processor):
         self.append(processor)
         return self
-
 
 
 
@@ -116,17 +97,6 @@ class ParseInput(Parse, Processor):
     def process_input(self, *args):
         return self.parse(*args)
 
-
-class ParseOutput(Parse, Processor):
-    '''
-    Represents a processor which parses output values with the given items.
-    '''
-    def __init__(self, items):
-        Processor.__init__(self)
-        Parse.__init__(self, items)
-
-    def process_output(self, *args):
-        return self.parse(*args)
 
 
 class ValidateInput(ParseInput):

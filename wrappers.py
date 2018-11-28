@@ -13,8 +13,7 @@ from types import MethodType
 class FuncWrapper(ProcessorBundle):
     '''
     An instance of this class encapsulates a method:
-    When invoke, It can process input argument values before calling the wrapped method.
-    Layer, the function is called and its output values are processed (it will be then returned by the wrapper call)
+    When invoked, It can process input argument values before calling the wrapped method.
     '''
     def __init__(self, func):
         '''
@@ -64,16 +63,7 @@ class FuncWrapper(ProcessorBundle):
         bounded_args.apply_defaults()
 
         args = bounded_args.args
-        output = self.call_wrapped(*self.process_input(*args))
-
-        if not iterable(output):
-            output = tuple() if output is None else (output, )
-
-        output = self.process_output(*output)
-
-        if len(output) == 0:
-            return None
-        return tuple(output) if len(output) > 1 else next(iter(output))
+        return self.call_wrapped(*self.process_input(*args))
 
     def process_input(self, *args):
         args = super().process_input(*args)
