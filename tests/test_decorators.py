@@ -3,7 +3,8 @@
 import unittest
 from unittest import TestCase
 
-from validation import parse, validate
+from validation import validate
+from parsing import parse
 from decorators import Wrapper
 
 
@@ -143,6 +144,14 @@ class TestDecorators(TestCase):
         self.assertEqual(str(foo), str(bar))
         self.assertEqual(repr(foo), repr(bar))
 
+
+    def test_keyword_arguments(self):
+        # TODO
+        pass
+
+    def test_default_values(self):
+        # TODO
+        pass
 
 if __name__ == '__main__':
     unittest.main()

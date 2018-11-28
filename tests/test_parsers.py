@@ -6,7 +6,7 @@ from functools import partial
 from re import match, fullmatch
 from math import floor, ceil
 
-from validation import parse
+from parsing import parse
 
 
 class TestParsers(TestCase):

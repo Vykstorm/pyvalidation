@@ -5,8 +5,8 @@ from re import match, fullmatch
 from functools import partial
 from itertools import chain
 
-from validation import parse, validate
-from validators import TypeValidator
+from validation import validate, TypeValidator
+from parsing import parse
 
 class TestValidators(TestCase):
     '''

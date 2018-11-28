@@ -1,5 +1,9 @@
 
-# This module is the facade of this library and the unique one exposed to the outside.
+# This module its exposed to the outside of this library
 
+
+# Include all decorators
+from decorators import validate
+
+# Also expose all avaliable predefined validators
 from validators import *
-from decorators import validate, parse
