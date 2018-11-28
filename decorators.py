@@ -5,6 +5,7 @@ from utils import iterable
 from types import MethodType
 from validators import Validator, EmptyValidator
 from functools import update_wrapper
+from exceptions import ValidationError, ParsingError
 
 class Processor:
     '''
@@ -50,9 +51,9 @@ class ProcessorBundle(Processor):
         for level, processor in zip(count(start=1), reversed(self.processors)):
             try:
                 args = processor.process_input(*args)
-            except Exception as e:
+            except ParsingError as e:
                 if len(self.processors) > 1:
-                    raise Exception('{} (at level {})'.format(e, level))
+                    e.level = level
                 raise e
         return args
 
@@ -63,6 +64,7 @@ class ProcessorBundle(Processor):
                 args = processor.process_output(*args)
             except Exception as e:
                 if len(self.processors) > 1:
+                    # TODO
                     raise Exception('{} (at level {})'.format(e, level))
                 raise e
         return args
@@ -165,14 +167,11 @@ class Parser:
             raise ValueError()
 
         result = []
-        for item, index, arg in zip(self.items, count(start=1), args):
+        for item, index, arg in zip(self.items, count(start=0), args):
             try:
                 result.append(item(arg))
             except Exception as e:
-                raise Exception('Error parsing argument with {}() at position {}{}'.format(
-                    item.__name__,
-                    index,
-                    ': {}'.format(e) if len(str(e)) > 0 else ''))
+                raise ParsingError(index, str(e))
         return result
 
 
@@ -218,12 +217,10 @@ class ValidateInput(ParseInput):
         super().__init__([validator.simplify() for validator in validators])
 
     def validate(self, *args):
-        for validator, index, arg in zip(self.items, count(start=1), args):
+        for validator, index, arg in zip(self.items, count(start=0), args):
             valid, error = validator(arg)
             if not valid:
-                raise Exception('Invalid argument at position {}{}'.format(
-                    index,
-                    ': {}'.format(error) if len(error) > 0 is not None else ''))
+                raise ValidationError(index, error)
 
     def parse(self, *args):
         if len(self.items) != len(args):
