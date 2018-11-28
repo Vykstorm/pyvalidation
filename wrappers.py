@@ -5,7 +5,7 @@ This module includes the definition of the class Wrapper
 
 from processors import ProcessorBundle
 from functools import update_wrapper
-from inspect import signature
+from inspect import signature, Parameter
 from utils import iterable
 from types import MethodType
 
@@ -27,7 +27,11 @@ class FuncWrapper(ProcessorBundle):
 
         super().__init__()
         self.wrapped_func = func
-        self.signature = signature(func, follow_wrapped=True)
+        s = signature(func, follow_wrapped=True)
+        s = s.replace(parameters=[param.replace(
+            default=InputValueWrapper(param) if param.default != Parameter.empty else param.default) for param in s.parameters.values()])
+        self.signature = s
+
         update_wrapper(self, func) # This method sets some attributes to introspect the wrapper object like __qualname__
 
     def call_wrapped(self, *args, **kwargs):
@@ -66,11 +70,9 @@ class FuncWrapper(ProcessorBundle):
 
         output = self.process_output(*output)
 
-        if iterable(output):
-            if len(output) == 0:
-                return None
-            return tuple(output) if len(output) > 1 else next(iter(output))
-        return output
+        if len(output) == 0:
+            return None
+        return tuple(output) if len(output) > 1 else next(iter(output))
 
     def __get__(self, instance, owner):
         '''
@@ -90,3 +92,34 @@ class FuncWrapper(ProcessorBundle):
 
     def __repr__(self):
         return repr(self.wrapped_func)
+
+
+
+
+class InputValueWrapper:
+    '''
+    Instances of this class encapsulates a function input argument.
+    '''
+    def __init__(self, value, validate=True, parse=True):
+        '''
+        Initializes this instance.
+        :param value: The argument value to be wrapped.
+        :param validate: Its a boolean value. If set to False, validators will not check the argument value this instance holds.
+        By default is set to True
+        :param parse: Its a boolean value. If set to False, parsers will not process the argument value this instance holds.
+        By default is set to True
+        '''
+        if not isinstance(validate, bool):
+            raise TypeError()
+        if not isinstance(parse, bool):
+            raise TypeError()
+
+        self.value = value
+        self.validate = validate
+        self.parse = parse
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return repr(self.value)
