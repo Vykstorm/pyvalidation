@@ -188,6 +188,18 @@ class TestDecorators(TestCase):
         def bar(x, y=1):
             pass
 
+    def test_return_values(self):
+        '''
+        Test if the returned values of the wrapped functions are forwarded correctly.
+        :return:
+        '''
+
+        @validate()
+        def foo(x):
+            return x
+
+        for x in (1, (1, 2, 3), (1, 2), (1,), [1, 2], [1], frozenset([1, 2, 3]) ):
+            self.assertEqual(x, foo(x))
 
 if __name__ == '__main__':
     unittest.main()
