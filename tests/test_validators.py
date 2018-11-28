@@ -7,6 +7,7 @@ from itertools import chain
 
 from decorators import validate, parse
 from validators import TypeValidator
+from exceptions import ValidationError
 
 
 class TestValidators(TestCase):
@@ -198,3 +199,58 @@ class TestValidators(TestCase):
             foo(False, 1)
         with self.assertRaises(Exception):
             foo(1, False)
+
+
+    def test_validate_kwargs(self):
+        '''
+        validate() decorator can accept positional and keyword arguments. This test checks if arguments are validated if
+        validators are specified as keyword arguments.
+        '''
+        @validate(int, int, z=range(0, 20))
+        def foo(x, y, z):
+            self.assertIsInstance(x, int)
+            self.assertIsInstance(y, int)
+            self.assertIn(z, range(0, 20))
+
+        foo(30, 30, 10)
+        with self.assertRaises(Exception):
+            foo(30, 30, 30)
+
+        @validate(z=int, y=float, x=str)
+        def bar(x, y, z):
+            self.assertIsInstance(x, str)
+            self.assertIsInstance(y, float)
+            self.assertIsInstance(z, int)
+
+        bar('Hello World!', 1.0, 1)
+        with self.assertRaises(Exception):
+            bar(1, 1.0, 'Hello World!')
+
+
+    def test_default_values(self):
+        '''
+        Argument default values are not validated. This test checks if default values are validated or not.
+        :return:
+        '''
+        @validate(int, int, str)
+        def foo(x, y, z=1):
+            self.assertTrue(z == 1 or isinstance(z, str))
+
+        foo(1, 1)
+        with self.assertRaises(Exception):
+            foo(1, 1, 1)
+
+
+
+    def test_exceptions(self):
+        '''
+        All exceptions raised by decorated functions using the decorator validate() are instances of class ValidationError
+        :return:
+        '''
+
+        @validate(int)
+        def foo(x):
+            pass
+
+        with self.assertRaises(ValidationError):
+            foo(None)
