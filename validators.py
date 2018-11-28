@@ -9,7 +9,6 @@ from inspect import isclass
 from itertools import islice
 from copy import copy
 
-
 class Validator:
     '''
     Base class for all kind of validators
