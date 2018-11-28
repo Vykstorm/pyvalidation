@@ -83,6 +83,26 @@ class TestParsers(TestCase):
         self.assertEqual(foo(2), 8)
         self.assertEqual(foo(3), 10)
 
+    def test_kwargs(self):
+        '''
+        Checks if parsers can be specified using keyword arguments.
+        :return:
+        '''
+
+        @parse(int, int, z=int)
+        @parse(z=partial(int.__add__, 1))
+        def foo(x, y, z):
+            self.assertEquals(z, 4)
+
+        foo('1', '2', '3')
+
+        @parse(z=int, y=bool, x=str)
+        def bar(x, y, z):
+            self.assertIsInstance(x, str)
+            self.assertIsInstance(y, bool)
+            self.assertIsInstance(z, int)
+
+        bar(1.0, 1.0, 1.0)
 
     def test_default_values(self):
         '''
