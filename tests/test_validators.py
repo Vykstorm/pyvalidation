@@ -201,7 +201,7 @@ class TestValidators(TestCase):
             foo(1, False)
 
 
-    def test_validate_kwargs(self):
+    def test_kwargs(self):
         '''
         validate() decorator can accept positional and keyword arguments. This test checks if arguments are validated if
         validators are specified as keyword arguments.
