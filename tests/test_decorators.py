@@ -144,12 +144,50 @@ class TestDecorators(TestCase):
 
 
     def test_keyword_arguments(self):
-        # TODO
-        pass
+        '''
+        Test if decorator accepts either positional and keyword argumnents.
+        :return:
+        '''
+
+        @validate(int, y=str, z=bool)
+        def foo(x, y, z):
+            pass
+
+        @validate(z=bool, y=str, x=int)
+        def bar(x, y, z):
+            pass
+
+        @parse(str, y=str, z=str)
+        def foo(x, y, z):
+            pass
+
+        @parse(z=str, y=str, x=str)
+        def bar(x, y, z):
+            pass
+
 
     def test_default_values(self):
-        # TODO
-        pass
+        '''
+        Test if method with default values can be decorated using parse() and validate() decorators
+        :return:
+        '''
+
+        @validate(bool)
+        def foo(x=True):
+            pass
+
+        @validate(int, str)
+        def foo(x, y=1):
+            pass
+
+        @parse(None)
+        def bar(x=True):
+            pass
+
+        @parse(None, None)
+        def bar(x, y=1):
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()
