@@ -279,7 +279,14 @@ class UserValidator(Validator):
         return self.func(arg)
 
     def error_message(self, arg):
-        return 'Expression {}({}) evaluated to False'.format('', str(arg))
+        func = self.func
+        if hasattr(func, '__qualname__'):
+            s = func.__qualname__
+        elif hasattr(func, '__name__'):
+            s = func.__name__
+        else:
+            s = None
+        return 'Expression{} evaluated to False'.format(' {}'.format(s) if s is not None else '', str(arg))
 
     def __str__(self):
         # TODO
