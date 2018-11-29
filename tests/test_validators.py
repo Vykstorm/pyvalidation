@@ -1,12 +1,12 @@
 
 import unittest
 from unittest import TestCase
-from re import match, fullmatch
+import re
 from functools import partial
 from itertools import chain
 
 from decorators import validate, parse
-from validators import TypeValidator
+from validators import TypeValidator, match, fullmatch
 from exceptions import ValidationError
 
 
@@ -124,7 +124,7 @@ class TestValidators(TestCase):
         with self.assertRaises(Exception):
             foo(2, 1)
 
-        @validate(partial(fullmatch, '\¿.+\?'))
+        @validate(partial(re.fullmatch, '\¿.+\?'))
         def bar(x):
             self.assertRegex(x, '^\¿.+\?$')
 
@@ -254,3 +254,37 @@ class TestValidators(TestCase):
 
         with self.assertRaises(ValidationError):
             foo(None)
+
+
+
+    def test_regex_validators(self):
+        '''
+        Test regex validators
+        :return:
+        '''
+
+        @validate(match('\d+'))
+        def foo(x):
+            self.assertIsInstance(x, str)
+            self.assertRegex(x, '\d+')
+
+        foo('1234  ')
+        with self.assertRaises(Exception):
+            foo('  1234')
+
+        with self.assertRaises(Exception):
+            foo(False)
+
+
+        @validate(fullmatch('[ ]*[^ ]+[ ]+[^ ]+[ ]*'))
+        def bar(x):
+            self.assertIsInstance(x, str)
+            self.assertRegex(x, '[ ]*[^ ]+[ ]+[^ ]+[ ]*')
+
+        bar(' Hello World! ')
+        bar(' Can i? ')
+
+        with self.assertRaises(Exception):
+            bar('HelloWorld')
+        with self.assertRaises(Exception):
+            bar(False)
