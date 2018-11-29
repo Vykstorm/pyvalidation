@@ -275,18 +275,28 @@ class RangeValidator(Validator):
 
 class UserValidator(Validator):
     '''
-    Its a validator defined by the user.
+    Its a validator defined by the user (it calls a user defined function to validate the given argument).
     '''
     def __init__(self, func):
         '''
         Initializes this instance.
         :param predicate: It must be a callable object which accepts the argument to be validated. The result must be
         evaluated to True if the given argument is valid or something that evaluates to False otherwise.
+        Also it can raise an exception. In such case, that will be equal as returning the value False
         '''
         super().__init__()
         if not callable(func):
             raise TypeError()
         self.func = func
+
+    def __call__(self, arg):
+        try:
+            result = self.check(arg)
+            if result:
+                return True, None
+            return False, self.error_message(arg)
+        except Exception as e:
+            return False, str(e)
 
     def check(self, arg):
         return self.func(arg)
@@ -474,3 +484,4 @@ class fullmatch(match):
         if not isinstance(arg, str):
             return TypeValidator((str,)).error_message(arg)
         return "\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
+
