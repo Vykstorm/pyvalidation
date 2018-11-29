@@ -6,7 +6,8 @@ This module defines all kinds of validators that can be used to validate your fu
 
 from utils import iterable
 from inspect import isclass
-from itertools import islice
+from itertools import islice, product
+from functools import reduce
 from copy import copy
 
 class Validator:
@@ -56,6 +57,7 @@ class Validator:
         '''
         return self
 
+
     def __str__(self):
         return self.__class__.__name__
 
@@ -93,7 +95,9 @@ class Validator:
 
         # Iterables (only list, tuples, frozensets and sets)
         if isinstance(obj, (list, tuple, set, frozenset)):
-            return ComposedValidator([Validator.from_spec(item) for item in obj])
+            if any(map(isclass, obj)) or any(map(iterable, obj)):
+                return ComposedValidator([Validator.from_spec(item) for item in obj])
+            return ValueValidator(obj)
 
         # Default validator
         return ValueValidator((obj,))
@@ -158,7 +162,7 @@ class TypeValidator(Validator):
         return self
 
     def __str__(self):
-        return 'type validator: {}'.format(', '.join([cls.__name__ for cls in self.types]))
+        return '<type validator: {}>'.format(', '.join([cls.__name__ for cls in self.types]))
 
 
 class ValueValidator(Validator):
@@ -216,7 +220,7 @@ class ValueValidator(Validator):
         return self
 
     def __str__(self):
-        return 'value validator: {}'.format(', '.join([str(value) for value in self.values]))
+        return '<value validator: {}>'.format(', '.join([str(value) for value in self.values]))
 
 
 class EmptyValidator(Validator):
@@ -231,7 +235,7 @@ class EmptyValidator(Validator):
         return self
 
     def __str__(self):
-        return "empty validator"
+        return "<empty validator>"
 
 
 class RangeValidator(Validator):
@@ -263,7 +267,7 @@ class RangeValidator(Validator):
         return 'Value in {} expected but got {}'.format(self.interval, arg)
 
     def __str__(self):
-        return 'range validator: {}'.format(self.interval)
+        return '<range validator: {}>'.format(self.interval)
 
 
 class UserValidator(Validator):
@@ -296,7 +300,7 @@ class UserValidator(Validator):
 
     def __str__(self):
         # TODO
-        return 'user validator: {}'.format('')
+        return '<user validator: {}>'.format('')
 
 
 class ComposedValidator(Validator):
@@ -361,6 +365,7 @@ class ComposedValidator(Validator):
             self.extend(other)
         return self
 
+
     def __iter__(self):
         '''
         It allows this instance to be iterable.
@@ -385,9 +390,43 @@ class ComposedValidator(Validator):
         if len(self) == 1:
             return next(iter(self)).simplify()
 
-        validators = [validator.simplify() for validator in self]
+        validators = [v.simplify() for v in self]
+
+        if any(map(lambda v: isinstance(v, EmptyValidator), validators)):
+            return EmptyValidator()
+
+        value_validators = [v for v in validators if isinstance(v, ValueValidator)]
+        type_validators = [v for v in validators if isinstance(v, TypeValidator)]
+        other_validators = [v for v in validators if not isinstance(v, (ValueValidator, TypeValidator))]
+
+        # Merge type validators if possible
+        if len(type_validators) > 1:
+            merged = []
+            for params in product((False, True), (False, True)):
+                types = reduce(tuple.__add__,
+                               [tuple(v.types) for v in type_validators if (v.check_subclasses, v.check_bool_subclasses) == params], ())
+                types = frozenset(types)
+                if len(types) > 0:
+                    merged.append(TypeValidator(types, *params))
+            type_validators = merged
+
+
+        # Merge value validators if possible
+        if len(value_validators) > 1:
+            merged = []
+            for match_types in (False, True):
+                values = reduce(list.__add__,
+                                [list(v.values) for v in value_validators if v.match_types == match_types], [])
+                if len(values) > 0:
+                    merged.append(ValueValidator(values, match_types))
+            value_validators = merged
+
+        # Return the simplied version of this composed validator
+        validators = value_validators + type_validators + other_validators
+        if len(validators) == 1:
+            return next(iter(validators))
         return ComposedValidator(validators)
 
     def __str__(self):
-        return ' | '.join([str(validator) for validator in self])
+        return '{{{}}}'.format(' | '.join([str(validator) for validator in self]))
 
