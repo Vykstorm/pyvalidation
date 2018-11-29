@@ -180,6 +180,12 @@ class ValueValidator(Validator):
         if len(values) == 0:
             raise ValueError()
 
+        if not isinstance(values, (frozenset, tuple)):
+            try:
+                values = frozenset(values)
+            except:
+                values = tuple(values)
+
         self.values = values
         self.match_types = match_types
 
@@ -378,7 +384,9 @@ class ComposedValidator(Validator):
     def simplify(self):
         if len(self) == 1:
             return next(iter(self)).simplify()
-        return ComposedValidator([validator.simplify() for validator in self])
+
+        validators = [validator.simplify() for validator in self]
+        return ComposedValidator(validators)
 
     def __str__(self):
         return ' | '.join([str(validator) for validator in self])
