@@ -13,6 +13,7 @@ from functools import partial
 from copy import copy
 
 
+
 class Validator:
     '''
     Base class for all kind of validators
@@ -105,6 +106,10 @@ class Validator:
         # Default validator
         return ValueValidator((obj,))
 
+
+'''
+Built-in validators
+'''
 
 
 class TypeValidator(Validator):
@@ -446,42 +451,27 @@ class ComposedValidator(Validator):
 
 
 
+'''
+REGEX validators
+'''
 
-class match(Validator):
-    '''
-    This validator checks if the given argument is a string value and matches at the beginning with a specific regex pattern.
-    '''
-    def __init__(self, pattern, flags=0):
-        '''
-        Initializes this instance.
-        A regex pattern is compiled using the arguments pattern and flags with re.compile
-        :param pattern: A regex pattern that must follow the syntax rules as defined in the 're' library.
-        :param flags: Additional flags to compile the regex pattern.
-        '''
-        super().__init__()
-        self.prog = re.compile(pattern, flags)
-
-    def check(self, arg):
-        return isinstance(arg, str) and self.prog.match(arg)
-
-    def error_message(self, arg):
+def match(pattern, flags=0):
+    prog = re.compile(pattern, flags)
+    def _match(arg):
         if not isinstance(arg, str):
-            return TypeValidator((str,)).error_message(arg)
-        return "\"{}\" string not matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
+            raise Exception(TypeValidator((str,)).error_message(arg))
+        if not prog.match(arg):
+            raise Exception("\"{}\" string not matching the regex pattern \"{}\"".format(arg, pattern))
+        return True
+    return _match
 
-    def __str__(self):
-        return '<match regex validator: {}>'.format(self.prog.pattern)
 
-
-class fullmatch(match):
-    '''
-    Its the same as match validator but the given argument must fully match with the regex pattern.
-    '''
-    def check(self, arg):
-        return isinstance(arg, str) and self.prog.fullmatch(arg)
-
-    def error_message(self, arg):
+def fullmatch(pattern, flags=0):
+    prog = re.compile(pattern, flags)
+    def _fullmatch(arg):
         if not isinstance(arg, str):
-            return TypeValidator((str,)).error_message(arg)
-        return "\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
-
+            raise Exception(TypeValidator((str,)).error_message(arg))
+        if not prog.match(arg):
+            raise Exception("\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, pattern))
+        return True
+    return _fullmatch
