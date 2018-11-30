@@ -4,13 +4,15 @@ This module defines all kinds of validators that can be used to validate your fu
 '''
 
 
-from utils import iterable
+from utils import iterable as _iterable
 from inspect import isclass
 from itertools import islice, product
 from functools import reduce
 import re
 from functools import partial
 from copy import copy
+
+_callable = callable
 
 
 
@@ -90,7 +92,7 @@ class Validator:
             return ValueValidator(obj)
 
         # Callables
-        if callable(obj):
+        if _callable(obj):
             return UserValidator(obj)
 
         # Range objects
@@ -99,7 +101,7 @@ class Validator:
 
         # Iterables (only list, tuples, frozensets and sets)
         if isinstance(obj, (list, tuple, set, frozenset)):
-            if any(map(isclass, obj)) or any(map(iterable, obj)):
+            if any(map(isclass, obj)) or any(map(_iterable, obj)):
                 return ComposedValidator([Validator.from_spec(item) for item in obj])
             return ValueValidator(obj)
 
@@ -131,7 +133,7 @@ class TypeValidator(Validator):
         By default this behaviour is disabled (default value is False)
         '''
         try:
-            if not iterable(types):
+            if not _iterable(types):
                 raise Exception()
             for cls in types:
                 if not isclass(cls):
@@ -186,7 +188,7 @@ class ValueValidator(Validator):
         By default is set to True.
         '''
         super().__init__()
-        if not iterable(values):
+        if not _iterable(values):
             raise TypeError()
         values = tuple(values)
         if len(values) == 0:
@@ -290,7 +292,7 @@ class UserValidator(Validator):
         Also it can raise an exception. In such case, that will be equal as returning the value False
         '''
         super().__init__()
-        if not callable(func):
+        if not _callable(func):
             raise TypeError()
         self.func = func
 
@@ -332,7 +334,7 @@ class ComposedValidator(Validator):
         :param items: It can be a list of instances of class Validator.
         '''
         super().__init__()
-        if not iterable(items):
+        if not _iterable(items):
             raise TypeError()
         items = tuple(items)
         if len(items) == 0:
@@ -359,7 +361,7 @@ class ComposedValidator(Validator):
         :param items: It must be an iterable where items must be instances of the class Validator
         :return:
         '''
-        if not iterable(items):
+        if not _iterable(items):
             raise TypeError()
         for item in items:
             self.add(item)
@@ -456,6 +458,7 @@ REGEX validators
 '''
 
 def matchregex(pattern, flags=0):
+
     prog = re.compile(pattern, flags)
     def _matchregex(arg):
         if not isinstance(arg, str):
@@ -475,3 +478,42 @@ def fullmatchregex(pattern, flags=0):
             raise Exception("\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, pattern))
         return True
     return _fullmatchregex
+
+
+
+'''
+Validators to check if given arguments are callable / iterable
+'''
+
+def iterable(arg):
+    if not _iterable(arg):
+        raise Exception('Value {} is not iterable'.format(arg))
+    return True
+
+
+def callable(arg):
+    if not _callable(arg):
+        raise Exception('Value {} is not callable'.format(arg))
+    return True
+
+
+
+'''
+Comparision validators.
+'''
+
+def _compare(op, op_name, a, b):
+    try:
+        if op(b, a):
+            return True
+    except:
+        raise Exception('Cant evaluate if value {} is {} than {}'.format(a, op_name, b))
+    raise Exception('Value {} is not {} than {}'.format(a, op_name, b))
+
+
+greater_than = lambda x: partial(_compare, lambda a, b: a > b, 'greater', x)
+lower_than = lambda x: partial(_compare, lambda a, b: a < b, 'lower', x)
+greater_equal_than = lambda x: partial(_compare, lambda a, b: a >= b, 'greater or equal', x)
+lower_equal_than = lambda x: partial(_compare, lambda a, b: a <= b, 'lower or equal', x)
+different_than = lambda x: partial(_compare, lambda a, b: a != b, 'different_than', x)
+not_equal_than = different_than

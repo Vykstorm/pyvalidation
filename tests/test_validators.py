@@ -6,7 +6,10 @@ from functools import partial
 from itertools import chain
 
 from decorators import validate, parse
-from validators import TypeValidator, matchregex, fullmatchregex
+from validators import TypeValidator
+from validators import matchregex, fullmatchregex
+from validators import greater_than, greater_equal_than, lower_than, lower_equal_than, not_equal_than
+
 from exceptions import ValidationError
 
 
@@ -259,7 +262,7 @@ class TestValidators(TestCase):
 
     def test_regex_validators(self):
         '''
-        Test regex validators
+        Test the validators matchregex and fullmatchregex
         :return:
         '''
 
@@ -288,3 +291,52 @@ class TestValidators(TestCase):
             bar('HelloWorld')
         with self.assertRaises(Exception):
             bar(False)
+
+
+    def test_comparision_validators(self):
+        '''
+        Test comparision validators.
+        :return:
+        '''
+
+        @validate(greater_than(10), greater_equal_than(10))
+        def foo(x, y):
+            self.assertGreater(x, 10)
+            self.assertGreaterEqual(y, 10)
+
+        foo(11, 11)
+        foo(11, 10)
+        foo(11.2, 10.1)
+        with self.assertRaises(Exception):
+            foo(10, 10)
+        with self.assertRaises(Exception):
+            foo(11, 9)
+
+
+        @validate(lower_than(10), lower_equal_than(10))
+        def bar(x, y):
+            self.assertGreater(10, x)
+            self.assertGreaterEqual(10, y)
+
+        bar(9, 9)
+        bar(9, 10)
+        bar(9.5, 9.9)
+        with self.assertRaises(Exception):
+            foo(10, 10)
+        with self.assertRaises(Exception):
+            foo(9, 11)
+
+
+        @validate(not_equal_than(0))
+        def qux(x):
+            self.assertNotEqual(x, 0)
+
+        qux(1)
+        qux(-1)
+        qux(0.5)
+        qux('Hello World')
+
+        with self.assertRaises(Exception):
+            qux(0)
+        with self.assertRaises(Exception):
+            qux(False)
