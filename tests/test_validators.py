@@ -1,16 +1,13 @@
-
-import unittest
 from unittest import TestCase
 import re
 from functools import partial
 from itertools import chain
 
-from decorators import validate, parse
-from validators import TypeValidator
-from validators import matchregex, fullmatchregex
-from validators import greater_than, greater_equal_than, lower_than, lower_equal_than, not_equal_than
-
-from exceptions import ValidationError
+from src.decorators import validate
+from src.validators import TypeValidator
+from src.validators import matchregex, fullmatchregex
+from src.validators import greater_than, greater_equal_than, lower_than, lower_equal_than, not_equal_than
+from src.exceptions import ValidationError
 
 
 class TestValidators(TestCase):

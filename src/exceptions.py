@@ -1,7 +1,3 @@
-
-from validators import Validator
-
-
 '''
 This module defines the base classes for exceptions thrown by this library
 '''

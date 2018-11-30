@@ -6,8 +6,8 @@ from functools import partial
 from re import match, fullmatch
 from math import floor, ceil
 
-from decorators import parse
-from exceptions import ParsingError
+from src.decorators import parse
+from src.exceptions import ParsingError
 
 class TestParsers(TestCase):
     '''

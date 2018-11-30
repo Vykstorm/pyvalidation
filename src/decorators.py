@@ -4,9 +4,9 @@ validate is an alias of ValidateInputDecorator class, and parse is an alias of P
 '''
 
 from inspect import signature
-from validators import Validator
-from processors import ValidateInput, ParseInput
-from wrappers import FuncWrapper
+from .validators import Validator
+from .processors import ValidateInput, ParseInput
+from .wrappers import FuncWrapper
 
 
 class Decorator:

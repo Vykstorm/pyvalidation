@@ -2,10 +2,10 @@
 This module defines the classes Processor, ProcessorBundle, ValidateInput and ParseInput
 '''
 
-from utils import iterable
-from exceptions import ParsingError, ValidationError
+from .utils import iterable
+from .exceptions import ParsingError, ValidationError
 from itertools import count
-from validators import Validator
+from src.validators import Validator
 
 class Processor:
     '''
@@ -132,4 +132,4 @@ class ValidateInput(ParseInput):
         return args
 
 # This import is written here because of cyclic import issues
-from wrappers import InputValueWrapper
+from .wrappers import InputValueWrapper

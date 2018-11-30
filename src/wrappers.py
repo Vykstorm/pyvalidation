@@ -3,10 +3,10 @@
 This module includes the definition of the class Wrapper
 '''
 
-from processors import ProcessorBundle
+from .processors import ProcessorBundle
 from functools import update_wrapper
 from inspect import signature, Parameter
-from utils import iterable
+from .utils import iterable
 from types import MethodType
 
 

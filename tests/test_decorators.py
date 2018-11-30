@@ -3,7 +3,7 @@
 import unittest
 from unittest import TestCase
 
-from decorators import validate, parse, FuncWrapper
+from src.decorators import validate, parse, FuncWrapper
 
 
 class TestDecorators(TestCase):
