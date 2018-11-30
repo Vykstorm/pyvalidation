@@ -458,6 +458,9 @@ REGEX validators
 '''
 
 def matchregex(pattern, flags=0):
+    '''
+    This validator checks if the given argument is a string and it matches at the beginning with the specified regex pattern.
+    '''
 
     prog = re.compile(pattern, flags)
     def _matchregex(arg):
@@ -470,6 +473,9 @@ def matchregex(pattern, flags=0):
 
 
 def fullmatchregex(pattern, flags=0):
+    '''
+    This validator checks if the given argument is a string and it fullly matches with the specified regex pattern
+    '''
     prog = re.compile(pattern, flags)
     def _fullmatchregex(arg):
         if not isinstance(arg, str):
@@ -486,12 +492,23 @@ Validators to check if given arguments are callable / iterable
 '''
 
 def iterable(arg):
+    '''
+    This validator checks if the given input argument supports iteration.
+    :param arg:
+    :return:
+    '''
     if not _iterable(arg):
         raise Exception('Value {} is not iterable'.format(arg))
     return True
 
 
 def callable(arg):
+    '''
+    This validator checks if the given input argument can be called (if its a function or a callable object that implements
+    the __call__ instance method)
+    :param arg:
+    :return:
+    '''
     if not _callable(arg):
         raise Exception('Value {} is not callable'.format(arg))
     return True
@@ -511,9 +528,36 @@ def _compare(op, op_name, a, b):
     raise Exception('Value {} is not {} than {}'.format(a, op_name, b))
 
 
-greater_than = lambda x: partial(_compare, lambda a, b: a > b, 'greater', x)
-lower_than = lambda x: partial(_compare, lambda a, b: a < b, 'lower', x)
-greater_equal_than = lambda x: partial(_compare, lambda a, b: a >= b, 'greater or equal', x)
-lower_equal_than = lambda x: partial(_compare, lambda a, b: a <= b, 'lower or equal', x)
-different_than = lambda x: partial(_compare, lambda a, b: a != b, 'different_than', x)
+def greater_than(x):
+    '''
+    This validator checks if the given argument is greater than the specified value.
+    In other words, if arg is the argument to be validated, it checks if expression arg > x is evaluated to True
+    '''
+    return partial(_compare, lambda a, b: a > b, 'greater', x)
+
+def lower_than(x):
+    '''
+    This validator checks if the given argument is lower than the specified value.
+    '''
+    return partial(_compare, lambda a, b: a < b, 'lower', x)
+
+def greater_equal_than(x):
+    '''
+    This validator tests if the given argument is greater or equal than the specified value.
+    '''
+    return partial(_compare, lambda a, b: a >= b, 'greater or equal', x)
+
+def lower_equal_than(x):
+    '''
+    This validator verifies if the given argument is lower or equal than the indicated value.
+    '''
+    return partial(_compare, lambda a, b: a <= b, 'lower or equal', x)
+
+def different_than(x):
+    '''
+    This validator  checks if the given argumnet is different (not equal) than the specified value.
+    '''
+    return partial(_compare, lambda a, b: a != b, 'different_than', x)
+
+# Alias of different_than
 not_equal_than = different_than
