@@ -6,7 +6,7 @@ from functools import partial
 from itertools import chain
 
 from decorators import validate, parse
-from validators import TypeValidator, match, fullmatch
+from validators import TypeValidator, matchregex, fullmatchregex
 from exceptions import ValidationError
 
 
@@ -263,7 +263,7 @@ class TestValidators(TestCase):
         :return:
         '''
 
-        @validate(match('\d+'))
+        @validate(matchregex('\d+'))
         def foo(x):
             self.assertIsInstance(x, str)
             self.assertRegex(x, '\d+')
@@ -276,7 +276,7 @@ class TestValidators(TestCase):
             foo(False)
 
 
-        @validate(fullmatch('[ ]*[^ ]+[ ]+[^ ]+[ ]*'))
+        @validate(fullmatchregex('[ ]*[^ ]+[ ]+[^ ]+[ ]*'))
         def bar(x):
             self.assertIsInstance(x, str)
             self.assertRegex(x, '[ ]*[^ ]+[ ]+[^ ]+[ ]*')

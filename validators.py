@@ -455,23 +455,23 @@ class ComposedValidator(Validator):
 REGEX validators
 '''
 
-def match(pattern, flags=0):
+def matchregex(pattern, flags=0):
     prog = re.compile(pattern, flags)
-    def _match(arg):
+    def _matchregex(arg):
         if not isinstance(arg, str):
             raise Exception(TypeValidator((str,)).error_message(arg))
         if not prog.match(arg):
             raise Exception("\"{}\" string not matching the regex pattern \"{}\"".format(arg, pattern))
         return True
-    return _match
+    return _matchregex
 
 
-def fullmatch(pattern, flags=0):
+def fullmatchregex(pattern, flags=0):
     prog = re.compile(pattern, flags)
-    def _fullmatch(arg):
+    def _fullmatchregex(arg):
         if not isinstance(arg, str):
             raise Exception(TypeValidator((str,)).error_message(arg))
         if not prog.match(arg):
             raise Exception("\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, pattern))
         return True
-    return _fullmatch
+    return _fullmatchregex
