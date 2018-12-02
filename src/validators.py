@@ -11,6 +11,7 @@ from functools import reduce
 import re
 from functools import partial
 from copy import copy
+from decimal import Decimal
 
 _callable = callable
 
@@ -504,3 +505,17 @@ class callable(Validator):
 
     def error_message(self, arg):
         return 'Value {} is not callable'.format(arg)
+
+
+
+class NumericTypeValidator(TypeValidator):
+    '''
+    Validator that checks if the given argument is either of type int, float, Decimal
+    '''
+    def __init__(self):
+        super().__init__((int, float, Decimal))
+
+    def error_message(self, arg):
+        return 'Numeric type expected but got {}'.format(type(arg).__name__)
+
+number = NumericTypeValidator()

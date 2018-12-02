@@ -2,10 +2,11 @@ from unittest import TestCase
 import re
 from functools import partial
 from itertools import chain
+from decimal import Decimal
 
 from src.decorators import validate
 from src.validators import TypeValidator
-from src.validators import matchregex, fullmatchregex
+from src.validators import matchregex, fullmatchregex, number
 from src.exceptions import ValidationError
 
 
@@ -287,3 +288,20 @@ class TestValidators(TestCase):
             bar('HelloWorld')
         with self.assertRaises(Exception):
             bar(False)
+
+
+    def test_number_validator(self):
+        '''
+        Test the "number" builtin validator
+        :return:
+        '''
+
+        @validate(number)
+        def foo(x):
+            self.assertIsInstance(x, (int, float, Decimal))
+
+        foo(1)
+        foo(2.5)
+        foo(Decimal('123'))
+        with self.assertRaises(Exception):
+            foo('123')
