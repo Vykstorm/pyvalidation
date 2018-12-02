@@ -288,5 +288,12 @@ class TestDecorators(TestCase):
             def bar(a, b, c, d):
                 pass
 
+
+        # Ellipsis cannot be specified more than one time
+        with self.assertRaises(Exception):
+            @validate(..., int, ...)
+            def qux(a, b, c, d):
+                pass
+
 if __name__ == '__main__':
     unittest.main()
