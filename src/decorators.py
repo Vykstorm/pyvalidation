@@ -44,10 +44,14 @@ class Decorator:
                 # Ellipsis is not in positional args, leave args unchanged.
                 return args
 
-            if len(args) == 0:
+            if len(args) == 1:
                 # Only Ellipsis value is specified, but not more positional arguments are present.
                 # This is equivalent as not indicating any positional argument at all.
                 return []
+
+            if args.count(Ellipsis) > 1:
+                # Ellipsis value cannot appear more than one time
+                raise ValueError('Ellipsis cannot be specified more than one time')
 
             k = args.index(Ellipsis)
 
