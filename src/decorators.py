@@ -13,6 +13,8 @@ class Decorator:
     '''
     Base class for ValidateinputDecorator and ParseInputDecorator
     '''
+
+    # This argument is used to fill unespecified arguments in the decorator
     empty_arg = None
 
     def __init__(self, *args, **kwargs):
@@ -30,35 +32,60 @@ class Decorator:
         :return: Returns a function wrapper (instance of the class Wrapper)
         '''
 
+        # Special object used to mark unespecified arguments in the decorator.
         class Placeholder:
             pass
 
         def parse_ellipsis(args, s):
+            '''
+            Auxiliar method to parse ellipsis when its specified in decorator positional arguments
+            '''
             if Ellipsis not in args:
+                # Ellipsis is not in positional args, leave args unchanged.
                 return args
+
+            if len(args) == 0:
+                # Only Ellipsis value is specified, but not more positional arguments are present.
+                # This is equivalent as not indicating any positional argument at all.
+                return []
+
             k = args.index(Ellipsis)
 
+            # Split args in two lists, before and after ellipsis
             a, b = list(args[:k]), list(args[k+1:])
             if len(b) == 0:
+                # Ellipsis is the last positional argument.
+                # This is equivalent as indicating the positional arguments before the ellipsis
                 return a
             n = len(args) - 1
 
-            params = [param for param in s.parameters.values() if param.kind == Parameter.POSITIONAL_OR_KEYWORD]
-            m = len(params)
+            # How much positional parameters are there?
+            m = len([param for param in s.parameters.values() if param.kind == Parameter.POSITIONAL_OR_KEYWORD])
             if n > m:
+                # More positional arguments than even positional/keyword parameters.
+                # That will raise an exception when binding the arguments to the signature later.
+                # Just return the arguments unchanged
                 return args
 
+            # Replace ellipsis with a sequence of placeholders such that the number of positional arguments are equal to the number
+            # of positional/keyword parameters in the function signature.
             c = [Placeholder] * (m - n)
             return a + c + b
 
-        def merge_args_kwargs(A, B):
+        def merge_args(A, B):
+            '''
+            Merge two sequences of positional arguments into one.
+            '''
             merged = []
             for a, b in zip(A, B):
                 if (a == Placeholder) ^ (b == Placeholder):
+                    # Only one of the arguments is a placeholder.
                     merged.append(a if a != Placeholder else b)
                 elif a == Placeholder and b == Placeholder:
+                    # Both arguments are placeholders
                     merged.append(Placeholder)
                 else:
+                    # None of the arguments are placeholders (Multiple values specified)
                     raise Exception()
             return merged
 
@@ -66,23 +93,38 @@ class Decorator:
         if not callable(f):
             raise TypeError()
 
+
+        # Grab decorator arguments
         args, kwargs = self.args, self.kwargs
 
+        # Fetch wrapped function signature
         s = signature(f, follow_wrapped=True)
 
+        # Parse ellipsis value if needed
         args = parse_ellipsis(args, s)
+
+        # A placeholder is assigned to each parameter as its default value.
         s = s.replace(parameters=[param.replace(default=Placeholder) for param in s.parameters.values()])
+
+        # Bind positional arguments to the function signature (apply also default values)
         bounded_args = s.bind(*args)
         bounded_args.apply_defaults()
 
+        # Bind keyword arguments to the function signature (apply also default values)
         bounded_kwargs = s.bind(**kwargs)
         bounded_kwargs.apply_defaults()
 
+        # Merge the result of both binding processes
         try:
-            args = merge_args_kwargs(bounded_args.args, bounded_kwargs.args)
+            args = merge_args(bounded_args.args, bounded_kwargs.args)
         except:
+            # Merged failed (because of setting multiple values for a single argument)
             s.bind(*args, **kwargs)
+
+        # Replace unespecified arguments with a defualt value
         args = [arg if arg != Placeholder else self.empty_arg for arg in args]
+
+        # Create the function wrapper and return it
         processor = self.create_processor(*args)
         wrapper = FuncWrapper(f) if not isinstance(f, FuncWrapper) else f
         wrapper.append(processor)
@@ -96,6 +138,7 @@ class ValidateInputDecorator(Decorator):
     '''
     A decorator to add input values validation feature.
     '''
+
     empty_arg = object
 
     def create_processor(self, *args):
