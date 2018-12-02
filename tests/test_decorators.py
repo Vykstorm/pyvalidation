@@ -165,6 +165,17 @@ class TestDecorators(TestCase):
         def bar(x, y, z):
             pass
 
+        # It cannot be multiple values for the same argument
+        with self.assertRaises(Exception):
+            @validate(int, int, int, a=int)
+            def qux(a, b, c):
+                pass
+
+        with self.assertRaises(Exception):
+            @parse(str, str, str, a=int)
+            def qux(a, b, c):
+                pass
+
 
     def test_default_values(self):
         '''
