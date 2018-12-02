@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from src.decorators import validate
 from src.validators import TypeValidator
-from src.validators import matchregex, fullmatchregex, number
+from src.validators import matchregex, fullmatchregex, number, uint
 from src.exceptions import ValidationError
 
 
@@ -290,9 +290,9 @@ class TestValidators(TestCase):
             bar(False)
 
 
-    def test_number_validator(self):
+    def test_number_validators(self):
         '''
-        Test the "number" builtin validator
+        Test numeric builtin validators
         :return:
         '''
 
@@ -305,3 +305,13 @@ class TestValidators(TestCase):
         foo(Decimal('123'))
         with self.assertRaises(Exception):
             foo('123')
+
+        @validate(uint)
+        def bar(x):
+            self.assertIsInstance(x, int)
+            self.assertGreaterEqual(x, 0)
+
+        bar(0)
+        bar(1)
+        with self.assertRaises(Exception):
+            bar(-1)

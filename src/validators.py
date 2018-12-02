@@ -488,7 +488,42 @@ class fullmatchregex(Validator):
 
 
 '''
-Validators to check if given arguments are callable / iterable
+Number validators
+'''
+
+class NumberValidator(TypeValidator):
+    '''
+    Validator that checks if the given argument is either of type int, float, Decimal
+    '''
+    def __init__(self):
+        super().__init__((int, float, Decimal))
+
+    def error_message(self, arg):
+        return 'Numeric type expected but got {}'.format(type(arg).__name__)
+
+
+
+class UnsignedIntValidator(TypeValidator):
+    '''
+    Validator that checks if the given argument is of integer type and greater or equal than 0
+    '''
+    def __init__(self):
+        super().__init__([int])
+
+    def check(self, arg):
+        return super().check(arg) and arg >= 0
+
+    def error_message(self, arg):
+        return 'int value greater or equal than 0 expected but got {}'.format(type(arg).__name__)
+
+number = NumberValidator()
+uint = UnsignedIntValidator()
+
+
+
+
+'''
+Misc validators
 '''
 
 
@@ -505,17 +540,3 @@ class callable(Validator):
 
     def error_message(self, arg):
         return 'Value {} is not callable'.format(arg)
-
-
-
-class NumericTypeValidator(TypeValidator):
-    '''
-    Validator that checks if the given argument is either of type int, float, Decimal
-    '''
-    def __init__(self):
-        super().__init__((int, float, Decimal))
-
-    def error_message(self, arg):
-        return 'Numeric type expected but got {}'.format(type(arg).__name__)
-
-number = NumericTypeValidator()
