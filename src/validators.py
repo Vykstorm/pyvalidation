@@ -457,33 +457,32 @@ class ComposedValidator(Validator):
 REGEX validators
 '''
 
-def matchregex(pattern, flags=0):
-    '''
-    This validator checks if the given argument is a string and it matches at the beginning with the specified regex pattern.
-    '''
+class matchregex(Validator):
+    def __init__(self, pattern, flags=0):
+        super().__init__()
+        self.prog = re.compile(pattern, flags)
 
-    prog = re.compile(pattern, flags)
-    def _matchregex(arg):
+    def check(self, arg):
+        return isinstance(arg, str) and self.prog.match(arg)
+
+    def error_message(self, arg):
         if not isinstance(arg, str):
-            raise Exception(TypeValidator((str,)).error_message(arg))
-        if not prog.match(arg):
-            raise Exception("\"{}\" string not matching the regex pattern \"{}\"".format(arg, pattern))
-        return True
-    return _matchregex
+            raise TypeValidator((str,)).error_message(arg)
+        raise "\"{}\" string not matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
 
 
-def fullmatchregex(pattern, flags=0):
-    '''
-    This validator checks if the given argument is a string and it fullly matches with the specified regex pattern
-    '''
-    prog = re.compile(pattern, flags)
-    def _fullmatchregex(arg):
+class fullmatchregex(Validator):
+    def __init__(self, pattern, flags=0):
+        super().__init__()
+        self.prog = re.compile(pattern, flags)
+
+    def check(self, arg):
+        return isinstance(arg, str) and self.prog.fullmatch(arg)
+
+    def error_message(self, arg):
         if not isinstance(arg, str):
-            raise Exception(TypeValidator((str,)).error_message(arg))
-        if not prog.match(arg):
-            raise Exception("\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, pattern))
-        return True
-    return _fullmatchregex
+            raise TypeValidator((str,)).error_message(arg)
+        raise "\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
 
 
 
@@ -491,24 +490,17 @@ def fullmatchregex(pattern, flags=0):
 Validators to check if given arguments are callable / iterable
 '''
 
-def iterable(arg):
-    '''
-    This validator checks if the given input argument supports iteration.
-    :param arg:
-    :return:
-    '''
-    if not _iterable(arg):
-        raise Exception('Value {} is not iterable'.format(arg))
-    return True
 
+class iterable(Validator):
+    def check(self, arg):
+        return _iterable(arg)
 
-def callable(arg):
-    '''
-    This validator checks if the given input argument can be called (if its a function or a callable object that implements
-    the __call__ instance method)
-    :param arg:
-    :return:
-    '''
-    if not _callable(arg):
-        raise Exception('Value {} is not callable'.format(arg))
-    return True
+    def error_message(self, arg):
+        return 'Value {} is not iterable'.format(arg)
+
+class callable(Validator):
+    def check(self, arg):
+        return _callable(arg)
+
+    def error_message(self, arg):
+        return 'Value {} is not callable'.format(arg)
