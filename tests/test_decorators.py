@@ -212,5 +212,81 @@ class TestDecorators(TestCase):
         for x in (1, (1, 2, 3), (1, 2), (1,), [1, 2], [1], frozenset([1, 2, 3]) ):
             self.assertEqual(x, foo(x))
 
+
+    def test_ellipsis(self):
+        '''
+        Test ellipsis feature
+        :return:
+        '''
+
+        # Ellipsis before any positional argument
+
+        @validate(..., int)
+        def foo(x, y, z, w):
+            self.assertIsInstance(w, int)
+
+        foo('Hello World!', 2.3, True, 1)
+        with self.assertRaises(Exception):
+            foo('Hello World!', 2.3, True, 2.5)
+
+
+        # Ellipsis after any positional argument
+        @validate(str, int, ...)
+        @validate(str, int)
+        def bar(x, y, z, w):
+            self.assertIsInstance(x, str)
+            self.assertIsInstance(y, int)
+
+        bar('Hello World', 1, False, False)
+        with self.assertRaises(Exception):
+            bar(False, False, 1, 2)
+
+        # Ellipsis between positional arguments
+        @validate(int, ..., str)
+        def qux(a, b, c, d):
+            self.assertIsInstance(a, int)
+            self.assertIsInstance(d, str)
+
+        qux(1, False, True, 'Hello World!')
+        with self.assertRaises(Exception):
+            qux(False, False, True, 'Hello World!')
+        with self.assertRaises(Exception):
+            qux(1, False, True, 2.0)
+
+        # Only ellipsis. Its dummy but whatever...
+        @validate(...)
+        @validate()
+        def baz(a, b, c, d):
+            pass
+        baz(1, 2, 3, 4)
+        baz(1, 2.0, True, 'Hello world!')
+
+
+        # Ellipsis and keyword arguments
+        @validate(int, ..., c=str)
+        def maz(a, b, c, d):
+            self.assertIsInstance(a, int)
+            self.assertIsInstance(c, str)
+
+        maz(1, 2.0, 'Hello World!', True)
+        with self.assertRaises(Exception):
+            maz(1, 2, 3, 4)
+
+        @validate(int, ..., float, c=str)
+        def foo(a, b, c, d):
+            self.assertIsInstance(a, int)
+            self.assertIsInstance(d, float)
+            self.assertIsInstance(c, str)
+        foo(1, None, 'Hello World!', 2.0)
+        with self.assertRaises(Exception):
+            foo(1, 2, 3, 4.0)
+
+
+        # No multiple values allowed for the same argment...
+        with self.assertRaises(Exception):
+            @validate(..., int, d=int)
+            def bar(a, b, c, d):
+                pass
+
 if __name__ == '__main__':
     unittest.main()
