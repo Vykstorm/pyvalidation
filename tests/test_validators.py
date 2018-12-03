@@ -3,6 +3,8 @@ import re
 from functools import partial
 from itertools import chain
 from decimal import Decimal
+from enum import Enum, auto
+
 
 from src.decorators import validate
 from src.validators import TypeValidator
@@ -315,3 +317,21 @@ class TestValidators(TestCase):
         bar(1)
         with self.assertRaises(Exception):
             bar(-1)
+
+
+    def test_enum_validators(self):
+        class Colors(Enum):
+            RED = auto()
+            BLUE = auto()
+            GREEN = auto()
+
+        @validate(Colors)
+        def foo(x):
+            pass
+
+        foo(Colors.RED)
+        foo(Colors.BLUE)
+        foo(Colors.GREEN)
+
+        with self.assertRaises(Exception):
+            foo(None)
