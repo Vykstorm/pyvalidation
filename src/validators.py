@@ -211,8 +211,8 @@ class ValueValidator(Validator):
         return False
 
     def error_message(self, arg):
-        return 'Value {} expected but got {}'.format(
-            ' or '.join([str(value) for value in self.values]),
+        return 'Value in {} expected but got {}'.format(
+            format_sequence(self.values),
             str(arg))
 
     def simplify(self):
@@ -406,6 +406,8 @@ class ComposedValidator(Validator):
             if validator.check(arg):
                 return True
         return False
+
+
 
     def simplify(self):
         if len(self) == 1:
