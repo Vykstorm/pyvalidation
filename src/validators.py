@@ -514,6 +514,9 @@ Misc validators
 
 
 class iterable(Validator):
+    '''
+    Validator that checks if the given argument is iterable.
+    '''
     def check(self, arg):
         return _iterable(arg)
 
@@ -521,6 +524,9 @@ class iterable(Validator):
         return 'Value {} is not iterable'.format(arg)
 
 class callable(Validator):
+    '''
+    Validator that checks if the given argument is a callable object
+    '''
     def check(self, arg):
         return _callable(arg)
 
