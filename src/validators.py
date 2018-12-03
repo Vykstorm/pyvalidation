@@ -396,6 +396,23 @@ class ComposedValidator(Validator):
                 return True
         return False
 
+    def error_message(self, arg):
+        validators = self.validators
+
+        if not all(map(lambda v: isinstance(v, (ValueValidator, TypeValidator, RangeValidator)), validators)):
+            return super().error_message(arg)
+
+        formatted = []
+        for validator in validators:
+            if isinstance(validator, TypeValidator):
+                formatted.append('value of type {}'.format(', '.join([cls.__name__ for cls in validator.types])))
+        for validator in validators:
+            if isinstance(validator, RangeValidator):
+                formatted.append('int value in {}'.format(format_range(validator.interval)))
+            elif isinstance(validator, ValueValidator):
+                formatted.append('value in {}'.format(format_sequence(validator.values)))
+
+        return 'Expected {} but got {} ({} type)'.format(' or '.join(formatted), str(arg), type(arg).__name__)
 
     def simplify(self):
         if len(self) == 1:
