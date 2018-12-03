@@ -172,8 +172,6 @@ class TypeValidator(Validator):
             return EmptyValidator()
         return self
 
-    def __str__(self):
-        return '<type validator: {}>'.format(', '.join([cls.__name__ for cls in self.types]))
 
 
 class ValueValidator(Validator):
@@ -230,8 +228,6 @@ class ValueValidator(Validator):
             pass
         return self
 
-    def __str__(self):
-        return '<value validator: {}>'.format(', '.join([str(value) for value in self.values]))
 
 
 class EmptyValidator(Validator):
@@ -245,8 +241,6 @@ class EmptyValidator(Validator):
     def __copy__(self):
         return self
 
-    def __str__(self):
-        return "<empty validator>"
 
 
 class RangeValidator(Validator):
@@ -277,8 +271,6 @@ class RangeValidator(Validator):
     def error_message(self, arg):
         return 'Value in {} expected but got {}'.format(format_range(self.interval), arg)
 
-    def __str__(self):
-        return '<range validator: {}>'.format(self.interval)
 
 
 class UserValidator(Validator):
@@ -319,9 +311,6 @@ class UserValidator(Validator):
             s = None
         return 'Expression{} evaluated to False'.format(' {}'.format(s) if s is not None else '', str(arg))
 
-    def __str__(self):
-        # TODO
-        return '<user validator: {}>'.format('')
 
 
 class ComposedValidator(Validator):
@@ -408,7 +397,6 @@ class ComposedValidator(Validator):
         return False
 
 
-
     def simplify(self):
         if len(self) == 1:
             return next(iter(self)).simplify()
@@ -449,10 +437,6 @@ class ComposedValidator(Validator):
         if len(validators) == 1:
             return next(iter(validators))
         return ComposedValidator(validators)
-
-    def __str__(self):
-        return '{{{}}}'.format(' | '.join([str(validator) for validator in self]))
-
 
 
 
