@@ -4,7 +4,7 @@ This module defines all kinds of validators that can be used to validate your fu
 '''
 
 
-from .utils import iterable as _iterable
+from .utils import iterable as _iterable, format_sequence, format_range
 from inspect import isclass
 from itertools import islice, product
 from functools import reduce
@@ -275,7 +275,7 @@ class RangeValidator(Validator):
         return arg in self.interval and ((not self.match_types) or (type(arg) == int))
 
     def error_message(self, arg):
-        return 'Value in {} expected but got {}'.format(self.interval, arg)
+        return 'Value in {} expected but got {}'.format(format_range(self.interval), arg)
 
     def __str__(self):
         return '<range validator: {}>'.format(self.interval)

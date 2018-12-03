@@ -3,6 +3,9 @@
 This module provides helper routines for the rest of the modules in this library.
 '''
 
+from itertools import islice
+
+
 def iterable(x):
     '''
     Checks if an object is iterable or not.
@@ -16,3 +19,30 @@ def iterable(x):
     except:
         pass
     return False
+
+
+
+def format_range(x):
+    '''
+    Stringifies a range object for pretty printing in error messages.
+    :param x: Is an object of class range
+    :return:
+    '''
+    if not isinstance(x, range):
+        raise TypeError()
+
+    if len(x) < 5:
+        return str(list(x))
+    return '[{}]'.format(', '.join(map(str, tuple(x[:2]) + ('...',) + tuple(x[-2:]))))
+
+def format_sequence(x):
+    '''
+    Stringifies an iterable object for pretty printing in error messages.
+    :return:
+    '''
+    if not iterable(x):
+        raise TypeError()
+
+    if len(x) < 6:
+        return str(list(x))
+    return '[{}]'.format(', '.join(map(str, tuple(islice(x, 0, 6)) + ('...',))))
