@@ -4,7 +4,7 @@ This module defines all kinds of validators that can be used to validate your fu
 '''
 
 
-from .utils import iterable as _iterable, format_sequence, format_range
+from .utils import iterable as _iterable, format_sequence, format_range, islambda
 from inspect import isclass
 from itertools import islice, product
 from functools import reduce
@@ -303,13 +303,16 @@ class UserValidator(Validator):
 
     def error_message(self, arg):
         func = self.func
-        if hasattr(func, '__qualname__'):
-            s = func.__qualname__
-        elif hasattr(func, '__name__'):
-            s = func.__name__
+        if not islambda(func):
+            if hasattr(func, '__qualname__'):
+                s = func.__qualname__
+            elif hasattr(func, '__name__'):
+                s = func.__name__
+            else:
+                s = None
         else:
             s = None
-        return 'Expression{} evaluated to False'.format(' {}'.format(s) if s is not None else '', str(arg))
+        return 'Expression{} evaluated to False'.format(' {}({})'.format(s, arg) if s is not None else '', str(arg))
 
 
 

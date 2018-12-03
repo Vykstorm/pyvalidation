@@ -4,6 +4,7 @@ This module provides helper routines for the rest of the modules in this library
 '''
 
 from itertools import islice
+from types import FunctionType
 
 
 def iterable(x):
@@ -46,3 +47,12 @@ def format_sequence(x):
     if len(x) < 6:
         return str(list(x))
     return '[{}]'.format(', '.join(map(str, tuple(islice(x, 0, 6)) + ('...',))))
+
+
+def islambda(x):
+    '''
+    Check if an object is a lambda function.
+    :param x:
+    :return:
+    '''
+    return isinstance(x, FunctionType) and x.__name__ == '<lambda>'
