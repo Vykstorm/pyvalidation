@@ -474,8 +474,8 @@ class matchregex(Validator):
 
     def error_message(self, arg):
         if not isinstance(arg, str):
-            raise TypeValidator((str,)).error_message(arg)
-        raise "\"{}\" string not matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
+            return TypeValidator((str,)).error_message(arg)
+        return "\"{}\" string not matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
 
 
 class fullmatchregex(Validator):
@@ -488,8 +488,8 @@ class fullmatchregex(Validator):
 
     def error_message(self, arg):
         if not isinstance(arg, str):
-            raise TypeValidator((str,)).error_message(arg)
-        raise "\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
+            return TypeValidator((str,)).error_message(arg)
+        return "\"{}\" string not fully matching the regex pattern \"{}\"".format(arg, self.prog.pattern)
 
 
 
