@@ -21,6 +21,18 @@ def iterable(x):
         pass
     return False
 
+def hashable(x):
+    '''
+    Checks if the given object implements the method __hash__
+    :param x:
+    :return:
+    '''
+    try:
+        hash(x)
+        return True
+    except:
+        pass
+    return False
 
 
 def format_range(x):

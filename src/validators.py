@@ -4,7 +4,7 @@ This module defines all kinds of validators that can be used to validate your fu
 '''
 
 
-from .utils import iterable as _iterable, format_sequence, format_range, islambda
+from .utils import iterable as _iterable, hashable as _hashable, format_sequence, format_range, islambda
 from inspect import isclass
 from itertools import islice, product
 from functools import reduce
@@ -533,7 +533,7 @@ Misc validators
 '''
 
 
-class iterable(Validator):
+class IterableValidator(Validator):
     '''
     Validator that checks if the given argument is iterable.
     '''
@@ -543,7 +543,17 @@ class iterable(Validator):
     def error_message(self, arg):
         return 'Value {} is not iterable'.format(arg)
 
-class callable(Validator):
+class HashableValidator(Validator):
+    '''
+    Validator that checks if the given argument is hashable (implements the method __hash__)
+    '''
+    def check(self, arg):
+        return _hashable(arg)
+
+    def error_message(self, arg):
+        return 'Value {} is not hashable'.format(arg)
+
+class CallableValidator(Validator):
     '''
     Validator that checks if the given argument is a callable object
     '''
@@ -552,3 +562,8 @@ class callable(Validator):
 
     def error_message(self, arg):
         return 'Value {} is not callable'.format(arg)
+
+
+iterable = IterableValidator()
+hashable = HashableValidator()
+callable = CallableValidator()
