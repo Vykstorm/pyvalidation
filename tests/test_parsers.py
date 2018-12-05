@@ -92,7 +92,7 @@ class TestParsers(TestCase):
         @parse(int, int, z=int)
         @parse(z=partial(int.__add__, 1))
         def foo(x, y, z):
-            self.assertEquals(z, 4)
+            self.assertEqual(z, 4)
 
         foo('1', '2', '3')
 
