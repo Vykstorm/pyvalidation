@@ -56,16 +56,21 @@ class ProcessorBundle(Processor):
 
 
 
-class Parse:
+class ParseInput(Processor):
     '''
-    Base class for ParseInput and ParseOutput
+    Represents a processor which parses inputs values with the given items.
     '''
     def __init__(self, items):
         if not iterable(items):
             raise TypeError()
         if not all(map(lambda item: callable(item), items)):
             raise TypeError()
+
+        Processor.__init__(self)
         self.items = tuple(items)
+
+    def process_input(self, *args):
+        return self.parse(*args)
 
     def parse(self, *args):
         if len(self.items) != len(args):
@@ -86,20 +91,7 @@ class Parse:
 
 
 
-class ParseInput(Parse, Processor):
-    '''
-    Represents a processor which parses inputs values with the given items.
-    '''
-    def __init__(self, items):
-        Processor.__init__(self)
-        Parse.__init__(self, items)
-
-    def process_input(self, *args):
-        return self.parse(*args)
-
-
-
-class ValidateInput(ParseInput):
+class ValidateInput(Processor):
     '''
     Its a processor which validates the input values using the given validators.
     '''
@@ -113,10 +105,10 @@ class ValidateInput(ParseInput):
         if isinstance(items, Validator) and not all(map(lambda item: isinstance(item, Validator), items)):
             raise TypeError()
         validators = items
-        super().__init__([validator.simplify() for validator in validators])
+        self.validators = [validator.simplify() for validator in validators]
 
     def validate(self, *args):
-        for validator, index, arg in zip(self.items, count(start=0), args):
+        for validator, index, arg in zip(self.validators, count(start=0), args):
             if isinstance(arg, InputValueWrapper):
                 if not arg.validate:
                     continue
@@ -125,8 +117,8 @@ class ValidateInput(ParseInput):
             if not valid:
                 raise ValidationError(index, error)
 
-    def parse(self, *args):
-        if len(self.items) != len(args):
+    def process_input(self, *args):
+        if len(self.validators) != len(args):
             raise ValueError()
         self.validate(*args)
         return args
