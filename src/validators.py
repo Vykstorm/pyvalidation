@@ -287,16 +287,15 @@ class UserValidator(Validator):
         self.func = func
 
     def __call__(self, arg):
-        try:
-            result = self.check(arg)
-            if result:
-                return True, None
-            return False, self.error_message(arg)
-        except Exception as e:
-            return False, str(e)
+        if not self.func(arg):
+            raise Exception(self.error_message(arg))
+        return True
 
     def check(self, arg):
-        return self.func(arg)
+        try:
+            return self.func(arg)
+        except:
+            return False
 
     def error_message(self, arg):
         func = self.func
