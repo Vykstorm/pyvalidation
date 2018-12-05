@@ -113,9 +113,10 @@ class ValidateInput(Processor):
                 if not arg.validate:
                     continue
                 arg = arg.wrapped_value
-            valid, error = validator(arg)
-            if not valid:
-                raise ValidationError(index, error)
+            try:
+                validator(arg)
+            except Exception as e:
+                raise ValidationError(index, str(e))
 
     def process_input(self, *args):
         if len(self.validators) != len(args):

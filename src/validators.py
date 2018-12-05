@@ -26,16 +26,13 @@ class Validator:
 
     def __call__(self, arg):
         '''
-        This method turns the validator to a callable object. It calls check(arg).
-        If check(arg) returns something that evaluates to True, this function returns
-        the tuple (True, None). This happens when the given argument is valid.
-        Otherwise, the tuple (False, error) is retrieved (when the arg is invalid). Where 'error'
-        will be the value returned by the method error_message(arg)
+        This method invokes check(arg). If the result of that call is not True, this method raises an exception.
+        Otherwise it just returns True
         '''
         result = self.check(arg)
-        if result:
-            return True, None
-        return False, self.error_message(arg)
+        if not result:
+            raise Exception(self.error_message(arg))
+        return True
 
     def check(self, arg):
         '''
