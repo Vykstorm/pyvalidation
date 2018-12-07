@@ -80,6 +80,9 @@ class Operation:
     def __neg__(self):
         return UnaryOperation(Operator.__neg__, self)
 
+    def __pos__(self):
+        return UnaryOperation(Operator.__pos__, self)
+
     def __abs__(self):
         return UnaryOperation(Operator.__abs__, self)
 
@@ -115,34 +118,22 @@ class Operation:
     # Comparision operators
 
     def __lt__(self, other):
-        return UserValidator(
-            BinaryOperation(Operator.__lt__, self, other)
-        )
+        return BinaryOperation(Operator.__lt__, self, other)
 
     def __le__(self, other):
-        return UserValidator(
-            BinaryOperation(Operator.__le__, self, other)
-        )
+        return BinaryOperation(Operator.__le__, self, other)
 
     def __eq__(self, other):
-        return UserValidator(
-            BinaryOperation(Operator.__eq__, self, other)
-        )
+        return BinaryOperation(Operator.__eq__, self, other)
 
     def __ne__(self, other):
-        return UserValidator(
-            BinaryOperation(Operator.__ne__, self, other)
-        )
+        return BinaryOperation(Operator.__ne__, self, other)
 
     def __ge__(self, other):
-        return UserValidator(
-            BinaryOperation(Operator.__ge__, self, other)
-        )
+        return BinaryOperation(Operator.__ge__, self, other)
 
     def __gt__(self, other):
-        return UserValidator(
-            BinaryOperation(Operator.__gt__, self, other)
-        )
+        return BinaryOperation(Operator.__gt__, self, other)
 
 
 class Operator:
@@ -314,6 +305,7 @@ Operator.__matmul__ = BinaryOperator('@', operator.__matmul__)
 Operator.__pow__ = BinaryOperator('**', operator.__pow__)
 Operator.__truediv__ = BinaryOperator('/', operator.__truediv__)
 Operator.__neg__ = UnaryOperator('-', operator.__neg__)
+Operator.__pos__ = UnaryOperator('+', operator.__pos__)
 Operator.__abs__ = UnaryOperator('|{}|', operator.__abs__)
 
 
