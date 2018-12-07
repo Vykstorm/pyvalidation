@@ -391,9 +391,28 @@ class NumberValidator(TypeValidator):
 
 
 # Validator aliases and singletons
+
 matchregex = MatchRegexValidator
 fullmatchregex = FullMatchRegexValidator
 iterable = IterableValidator()
 hashable = HashableValidator()
 callable = CallableValidator()
 number = NumberValidator()
+
+# Single type validators
+
+Int = TypeValidator((int,))
+Float = TypeValidator((float,))
+Bool = TypeValidator((bool,))
+Complex = TypeValidator((complex,))
+Str = TypeValidator((str,))
+Bytes = TypeValidator((bytes,))
+ByteArray = TypeValidator((bytearray,))
+List = TypeValidator((list,))
+Tuple = TypeValidator((tuple,))
+Set = TypeValidator((set,))
+FrozenSet = TypeValidator((frozenset,))
+Dict = TypeValidator((dict,))
+
+Boolean = Bool
+String = Str
