@@ -7,8 +7,6 @@ This module defines all kinds of validators that can be used to validate your fu
 from .utils import iterable as _iterable, hashable as _hashable, format_sequence, format_range, islambda
 from .operations import Operation
 from inspect import isclass
-from itertools import islice, product
-from functools import reduce
 import re
 from decimal import Decimal
 
