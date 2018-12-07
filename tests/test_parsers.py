@@ -8,6 +8,8 @@ from math import floor, ceil
 
 from src.decorators import parse
 from src.exceptions import ParsingError
+from src.operations import arg
+
 
 class TestParsers(TestCase):
     '''
@@ -128,6 +130,28 @@ class TestParsers(TestCase):
 
         with self.assertRaises(ParsingError):
             foo('Hello World!')
+
+
+
+    def test_expressions(self):
+        '''
+        Expressions built with the placeholder argument can be used as parsers
+        '''
+
+        @parse(arg)
+        def foo(x):
+            return x
+
+        self.assertEqual(foo(1), 1)
+        self.assertEqual(foo('Hello World!'), 'Hello World!')
+
+
+        @parse((arg + 1) ** 2)
+        def bar(x):
+            return x
+        self.assertEqual(bar(1), 4)
+        self.assertEqual(bar(2), 9)
+
 
 if __name__ == '__main__':
     unittest.main()

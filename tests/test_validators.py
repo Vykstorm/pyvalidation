@@ -10,6 +10,7 @@ from src.decorators import validate
 from src.validators import TypeValidator
 from src.validators import matchregex, fullmatchregex, number
 from src.exceptions import ValidationError
+from src.operations import arg
 
 
 class TestValidators(TestCase):
@@ -329,3 +330,57 @@ class TestValidators(TestCase):
 
         with self.assertRaises(Exception):
             foo(None)
+
+
+
+    def test_expressions(self):
+        '''
+        Expressions built with the placeholder argument feature can be used as validators.
+        '''
+        @validate(arg)
+        def foo(x):
+            self.assertTrue(x)
+
+        foo(1)
+        foo(True)
+        foo(1.0)
+        with self.assertRaises(Exception):
+            foo(False)
+        with self.assertRaises(Exception):
+            foo(0)
+
+
+        @validate(arg > 0)
+        def bar(x):
+            self.assertGreater(x, 0)
+
+        bar(1)
+        bar(1.0)
+        with self.assertRaises(Exception):
+            bar(0)
+        with self.assertRaises(Exception):
+            bar(-1.0)
+
+
+        @validate((arg >= 0) & (arg < 10))
+        def qux(x):
+            self.assertIn(x, range(0, 10))
+
+        qux(0)
+        qux(4)
+        qux(9)
+        with self.assertRaises(Exception):
+            qux(10)
+        with self.assertRaises(Exception):
+            qux(-1)
+
+
+        @validate(((arg**2) % 2) == 0)
+        def baz(x):
+            pass
+
+        baz(2)
+        baz(4)
+        baz(6)
+        with self.assertRaises(Exception):
+            baz(3)
