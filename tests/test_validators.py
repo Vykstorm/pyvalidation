@@ -9,6 +9,7 @@ from enum import Enum, auto
 from src.decorators import validate
 from src.validators import TypeValidator
 from src.validators import matchregex, fullmatchregex, number
+from src.validators import Int, Float, Bool, Complex, Str, List, Tuple, Set, FrozenSet, Dict
 from src.exceptions import ValidationError
 from src.operations import arg
 
@@ -83,6 +84,28 @@ class TestValidators(TestCase):
             foo(None, 'Hello World')
         with self.assertRaises(Exception):
             foo(True, None)
+
+
+        @validate(Int, Float, Bool, Str, Complex)
+        def bar(x, y, z, w, q):
+            self.assertIsInstance(x, int)
+            self.assertIsInstance(y, float)
+            self.assertIsInstance(z, bool)
+            self.assertIsInstance(w, str)
+            self.assertIsInstance(q, complex)
+
+        bar(1, 1.0, True, 'Hello World!', complex(1))
+
+        @validate(List, Tuple, Set, FrozenSet, Dict)
+        def bar(x, y, z, w, q):
+            self.assertIsInstance(x, list)
+            self.assertIsInstance(y, tuple)
+            self.assertIsInstance(z, set)
+            self.assertIsInstance(w, frozenset)
+            self.assertIsInstance(q, dict)
+
+        bar([], (), set(), frozenset(), {})
+
 
         # Test custom classes as type validators
         class Qux:
