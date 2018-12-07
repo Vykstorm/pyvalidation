@@ -399,14 +399,17 @@ fullmatchregex = FullMatchRegexValidator
 iterable = IterableValidator()
 hashable = HashableValidator()
 number = NumberValidator()
+Number = number
 
 # Single type validators
 
 Int = TypeValidator((int,))
 Float = TypeValidator((float,))
 Bool = TypeValidator((bool,))
+Boolean = Bool
 Complex = TypeValidator((complex,))
 Str = TypeValidator((str,))
+String = Str
 Bytes = TypeValidator((bytes,))
 ByteArray = TypeValidator((bytearray,))
 List = TypeValidator((list,))
