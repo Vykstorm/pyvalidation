@@ -8,7 +8,7 @@ from enum import Enum, auto
 
 from src.decorators import validate
 from src.validators import TypeValidator
-from src.validators import matchregex, fullmatchregex, number, uint
+from src.validators import matchregex, fullmatchregex, number
 from src.exceptions import ValidationError
 
 
@@ -307,16 +307,6 @@ class TestValidators(TestCase):
         foo(Decimal('123'))
         with self.assertRaises(Exception):
             foo('123')
-
-        @validate(uint)
-        def bar(x):
-            self.assertIsInstance(x, int)
-            self.assertGreaterEqual(x, 0)
-
-        bar(0)
-        bar(1)
-        with self.assertRaises(Exception):
-            bar(-1)
 
 
     def test_enum_validators(self):

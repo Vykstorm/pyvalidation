@@ -100,12 +100,12 @@ class ValidateInput(Processor):
         Initializes this instance.
         :param items: Must be an iterable list with Validator instance objects to validate the input values.
         '''
-        if not iterable(items) and not isinstance(items, Validator):
+        if not iterable(items):
             raise TypeError()
-        if isinstance(items, Validator) and not all(map(lambda item: isinstance(item, Validator), items)):
+        validators = tuple(items)
+        if not all(map(lambda v: isinstance(v, Validator), validators)):
             raise TypeError()
-        validators = items
-        self.validators = [validator.simplify() for validator in validators]
+        self.validators = validators
 
     def validate(self, *args):
         for validator, index, arg in zip(self.validators, count(start=0), args):
