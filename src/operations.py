@@ -329,10 +329,6 @@ Operator.__ge__ = BinaryOperator('>=', operator.__ge__)
 Operator.__gt__ = BinaryOperator('>', operator.__gt__)
 
 
-
-# This import statement is defined here to avoid dependency cycles
-from .validators import UserValidator
-
 # Identity aliases
 placeholder = Identity()
 arg = placeholder

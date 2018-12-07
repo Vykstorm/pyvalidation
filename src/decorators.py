@@ -9,6 +9,7 @@ from .processors import ValidateInput, ParseInput
 from .wrappers import FuncWrapper
 
 
+
 class Decorator:
     '''
     Base class for ValidateinputDecorator and ParseInputDecorator
@@ -40,7 +41,9 @@ class Decorator:
             '''
             Auxiliar method to parse ellipsis when its specified in decorator positional arguments
             '''
-            if Ellipsis not in args:
+            is_ellipsis = lambda x: x is Ellipsis
+
+            if not any(map(is_ellipsis, args)):
                 # Ellipsis is not in positional args, leave args unchanged.
                 return args
 
@@ -49,11 +52,11 @@ class Decorator:
                 # This is equivalent as not indicating any positional argument at all.
                 return []
 
-            if args.count(Ellipsis) > 1:
+            if len([arg for arg in args if is_ellipsis(arg)]) > 1:
                 # Ellipsis value cannot appear more than one time
                 raise ValueError('Ellipsis cannot be specified more than one time')
 
-            k = args.index(Ellipsis)
+            k = next(filter(lambda index: is_ellipsis(args[index]), range(0, len(args))))
 
             # Split args in two lists, before and after ellipsis
             a, b = list(args[:k]), list(args[k+1:])

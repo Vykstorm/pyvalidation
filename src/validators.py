@@ -70,6 +70,10 @@ class Validator:
         if isinstance(obj, Validator):
             return obj
 
+        # Expressions
+        if isinstance(obj, Operation):
+            return UserValidator(obj)
+
         # Match any type...
         if obj == object:
             return EmptyValidator()
