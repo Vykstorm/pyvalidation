@@ -414,6 +414,3 @@ Tuple = TypeValidator((tuple,))
 Set = TypeValidator((set,))
 FrozenSet = TypeValidator((frozenset,))
 Dict = TypeValidator((dict,))
-
-Boolean = Bool
-String = Str
