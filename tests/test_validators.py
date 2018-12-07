@@ -310,6 +310,10 @@ class TestValidators(TestCase):
 
 
     def test_enum_validators(self):
+        '''
+        Test that enum classes can be used as type validators
+        :return:
+        '''
         class Colors(Enum):
             RED = auto()
             BLUE = auto()
