@@ -309,6 +309,23 @@ class TestValidators(TestCase):
         with self.assertRaises(Exception):
             foo('123')
 
+    def test_callable_validators(self):
+        '''
+        Test callable builtin validator
+        '''
+
+        @validate(callable)
+        def foo(x):
+            pass
+
+        def bar():
+            pass
+
+        foo(lambda x: x)
+        foo(bar)
+        with self.assertRaises(Exception):
+            foo(1)
+
 
     def test_enum_validators(self):
         '''

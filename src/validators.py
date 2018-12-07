@@ -11,7 +11,6 @@ from itertools import islice, product
 from functools import reduce
 import re
 from decimal import Decimal
-_callable = callable
 
 
 
@@ -67,6 +66,14 @@ class Validator:
 
     @staticmethod
     def from_spec(obj):
+        # Match any type...
+        if obj is object:
+            return EmptyValidator()
+
+        # Match any callable object
+        if obj is callable:
+            return CallableValidator()
+
         if isinstance(obj, Validator):
             return obj
 
@@ -74,9 +81,6 @@ class Validator:
         if isinstance(obj, Operation):
             return UserValidator(obj)
 
-        # Match any type...
-        if obj == object:
-            return EmptyValidator()
 
         # Classes and built-in types.
         if isclass(obj):
@@ -87,7 +91,7 @@ class Validator:
             return ValueValidator(obj)
 
         # Callables
-        if _callable(obj):
+        if callable(obj):
             return UserValidator(obj)
 
         # Range objects
@@ -115,7 +119,7 @@ class UserValidator(Validator):
         It must accept one argument and return something that evaluates to True if such argument is valid or something
         that evaluates to false or raise an exception otherwise.
         '''
-        if not _callable(func):
+        if not callable(func):
             raise TypeError()
 
         super().__init__()
@@ -361,7 +365,7 @@ class CallableValidator(Validator):
     Validator that checks if the given argument is callable or not
     '''
     def validate(self, arg):
-        return _callable(arg)
+        return callable(arg)
 
     def error_message(self, arg):
         return 'Value {} is not callable'.format(arg)
@@ -396,7 +400,6 @@ matchregex = MatchRegexValidator
 fullmatchregex = FullMatchRegexValidator
 iterable = IterableValidator()
 hashable = HashableValidator()
-callable = CallableValidator()
 number = NumberValidator()
 
 # Single type validators
