@@ -5,7 +5,7 @@
 from src.decorators import validate, parse
 
 # Type validators
-from src.validators import Int, Float, Bool, Boolean, Complex, Str, String, Bytes, ByteArray
+from src.validators import Int, Float, Bool, Complex, Str, Bytes, ByteArray
 from src.validators import List, Tuple, Set, FrozenSet
 from src.validators import number, Number
 
