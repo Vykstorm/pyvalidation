@@ -7,10 +7,14 @@ from enum import Enum, auto
 from math import floor, sqrt
 
 from src.decorators import validate
+
 from src.validators import TypeValidator, UserValidator
 from src.validators import matchregex, fullmatchregex, number
 from src.validators import Int, Float, Bool, Complex, Str, List, Tuple, Set, FrozenSet, Dict
+from src.validators import array
+
 from src.exceptions import ValidationError
+
 from src.operations import arg
 
 
@@ -518,3 +522,66 @@ class TestValidators(TestCase):
             qux(-1.0)
         with self.assertRaises(Exception):
             qux('Hello world!')
+
+
+    def test_ndarray_validators(self):
+        '''
+        Test array built-in validator to check numpy ndaray objects.
+        This test will only be executed if numpy module is avaliable.
+        :return:
+        '''
+
+        try:
+            import numpy as np
+        except:
+            return
+
+
+        @validate(array)
+        def foo(x):
+            self.assertIsInstance(x, np.ndarray)
+
+        foo(np.array([]))
+        with self.assertRaises(Exception):
+            foo([])
+
+        # Test array validator with filters
+
+        @validate(array(dtype=np.uint8))
+        def foo(x):
+            self.assertEqual(x.dtype, np.uint8)
+
+        foo(np.array([], dtype=np.uint8))
+        with self.assertRaises(Exception):
+            foo(np.array([], dtype=np.float64))
+
+
+        @validate(array(ndim=1), array(size=4))
+        def bar(x, y):
+            self.assertEqual(x.ndim, 1)
+            self.assertEqual(y.size, 4)
+
+        bar(np.array([1,2,3]), np.ones([2,2]))
+        with self.assertRaises(Exception):
+            bar(np.ones([2,2]))
+        with self.assertRaises(Exception):
+            bar(np.array([]), np.ones([3,3]))
+
+
+        @validate(array(ndim=2, size=9))
+        def qux(x):
+            self.assertEqual(x.ndim, 2)
+            self.assertEqual(x.size, 9)
+
+        qux(np.zeros([3,3]))
+        with self.assertRaises(Exception):
+            qux(np.zeros([4,4]))
+
+
+        @validate(array(shape=(3,3)))
+        def baz(x):
+            self.assertEqual(x.shape, (3,3))
+
+        baz(np.ones([3,3]))
+        with self.assertRaises(Exception):
+             baz(np.zeros([4,2]))

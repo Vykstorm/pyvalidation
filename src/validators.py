@@ -390,15 +390,122 @@ class NumberValidator(TypeValidator):
         return 'Numeric type expected but got {}'.format(type(arg).__name__)
 
 
+class NdarrayValidator(TypeValidator):
+    '''
+    This validators matches only ndarrays (numpy arrays). Also filters for the shape, size or dtype properties of the array can
+    be indicated.
+    This validator can only be used if numpy module is avaliable.
+    '''
+    def __init__(self, dtype=None, ndim=None, size=None, shape=None):
+        import numpy as np
+        from numpy import ndarray
+
+        if dtype is not None and ((not isclass(dtype) or not issubclass(dtype, np.generic)) and not isinstance(dtype, np.dtype)):
+            raise TypeError('dtype must be a valid numpy type')
+
+        if ndim is not None and shape is not None:
+            raise ValueError('ndim and shape arguments cannot be specified together')
+
+        if size is not None and shape is not None:
+            raise ValueError('size and shape arguments cannot be specified together')
+
+        if ndim is not None:
+            if not isinstance(ndim, int):
+                raise TypeError('ndim must be an int value')
+            if ndim < 1:
+                raise ValueError('ndim must be greater or equal than 1')
+
+        if size is not None:
+            if not isinstance(size, int):
+                raise TypeError('size must be an int value')
+            if size < 0:
+                raise ValueError('size must be greater or equal than 0')
+
+        if shape is not None:
+            if not isinstance(shape, (list, tuple)):
+                raise TypeError('shape must be a tuple or a list object')
+
+            if not all(map(lambda dim: isinstance(dim, int) and dim >= 1, shape)):
+                raise ValueError('shape dimensions must be int values greater or equal than 1')
+
+            shape = tuple(shape)
+
+            if len(shape) == 0:
+                raise ValueError('At least one dimension must be specified')
+
+        super().__init__(types=(ndarray,))
+
+        self.dtype = dtype
+        self.ndim = ndim
+        self.size = size
+        self.shape = shape
+
+    def __call__(self, *args, **kwargs):
+        if len(kwargs) > 0:
+            return NdarrayValidator(**kwargs)
+        return super().__call__(*args)
+
+    def validate(self, arg):
+        if not super().validate(arg):
+            return False
+
+        if self.dtype is not None and arg.dtype != self.dtype:
+            return False
+
+        if self.shape is None:
+            if self.ndim is not None and arg.ndim != self.ndim:
+                return False
+            if self.size is not None and arg.size != self.size:
+                return False
+        else:
+            if arg.shape != self.shape:
+                return False
+
+        return True
+
+    def error_message(self, arg):
+        import numpy as np
+
+        if not super().validate(arg):
+            return super().error_message(arg)
+
+        if self.dtype is not None and arg.dtype != self.dtype:
+            return 'Expected ndarray {} dtype but got {}'.format(
+                str(self.dtype) if isinstance(self.dtype, np.dtype) else self.dtype.__name__,
+                arg.dtype)
+
+        if self.shape is None:
+            if self.ndim is not None and arg.ndim != self.ndim:
+                return 'Expected {}D-array but got {}D-array'.format(self.ndim, arg.ndim)
+
+            if self.size is not None and arg.size != self.size:
+                return 'Expected ndarray with {} elements but got {} instead'.format(self.size, arg.size)
+
+        else:
+            if arg.shape != self.shape:
+                return 'Expected {} array but got {} array'.format(
+                    'x'.join(map(str, self.shape)),
+                    'x'.join(map(str, arg.shape))
+                )
+
+        return ''
+
+
+
 
 # Validator aliases and singletons
 
 matchregex = MatchRegexValidator
 fullmatchregex = FullMatchRegexValidator
+
 iterable = IterableValidator()
 hashable = HashableValidator()
+
 number = NumberValidator()
 Number = number
+
+array = NdarrayValidator()
+Array = array
 
 # Single type validators
 
@@ -407,10 +514,13 @@ Float = TypeValidator((float,))
 Bool = TypeValidator((bool,))
 Complex = TypeValidator((complex,))
 Str = TypeValidator((str,))
+
 Bytes = TypeValidator((bytes,))
 ByteArray = TypeValidator((bytearray,))
+
 List = TypeValidator((list,))
 Tuple = TypeValidator((tuple,))
 Set = TypeValidator((set,))
 FrozenSet = TypeValidator((frozenset,))
+
 Dict = TypeValidator((dict,))
