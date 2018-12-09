@@ -53,7 +53,8 @@ class Validator:
     def __invert__(self):
         return InvertedValidator(self)
 
-
+    def __xor__(self, other):
+        return self & ~other | ~self & other
 
     def __str__(self):
         return self.__class__.__name__
