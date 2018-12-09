@@ -170,12 +170,10 @@ class DisjunctValidator(Validator):
     An input argument is considered valid if its also valid for at least one of the validators that
     this instance is composed with.
     '''
-    def __init__(self, validators):
-        if not _iterable(validators):
+    def __init__(self, items):
+        if not _iterable(items):
             raise TypeError()
-        if not all(map(lambda v: isinstance(v, Validator), validators)):
-            raise TypeError()
-        validators = tuple(validators)
+        validators = tuple([item if isinstance(item, Validator) else Validator.from_spec(item) for item in items])
         if len(validators) == 0:
             raise ValueError()
 
@@ -195,12 +193,10 @@ class ConjunctValidator(Validator):
     is composed with
     '''
 
-    def __init__(self, validators):
-        if not _iterable(validators):
+    def __init__(self, items):
+        if not _iterable(items):
             raise TypeError()
-        if not all(map(lambda v: isinstance(v, Validator), validators)):
-            raise TypeError()
-        validators = tuple(validators)
+        validators = tuple([item if isinstance(item, Validator) else Validator.from_spec(item) for item in items])
         if len(validators) == 0:
             raise ValueError()
 
@@ -219,9 +215,11 @@ class InvertedValidator(Validator):
     An input argument is considered valid if its not valid for the other validator.
     '''
 
-    def __init__(self, validator):
-        if not isinstance(validator, Validator):
-            raise TypeError()
+    def __init__(self, item):
+        if not isinstance(item, Validator):
+            validator = Validator.from_spec(item)
+        else:
+            validator = item
 
         self.validator = validator
 

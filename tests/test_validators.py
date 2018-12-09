@@ -474,3 +474,47 @@ class TestValidators(TestCase):
         baz(6)
         with self.assertRaises(Exception):
             baz(3)
+
+
+        # Test if expressions can be composed with regular validators using bitwise operators
+
+        @validate(Int & (arg > 0))
+        def foo(x):
+            self.assertIsInstance(x, int)
+            self.assertGreater(x, 0)
+
+        foo(1)
+        with self.assertRaises(Exception):
+            foo('Hello world!')
+
+        with self.assertRaises(Exception):
+            foo(0)
+
+
+        @validate((Int & (arg > 0)) ^ (Float & (arg < 0)))
+        def bar(x):
+            self.assertTrue((isinstance(x, int) and x > 0) ^ (isinstance(x, float) and x < 0))
+
+        bar(1)
+        bar(-1.0)
+
+        with self.assertRaises(Exception):
+            bar(-1)
+        with self.assertRaises(Exception):
+            bar(1.0)
+        with self.assertRaises(Exception):
+            bar('Hello world')
+
+
+        @validate(Int | (Float & (arg > 0)))
+        def qux(x):
+            self.assertTrue(isinstance(x, int) or (isinstance(x, float) and x > 0))
+
+        qux(-1)
+        qux(1)
+        qux(1.0)
+
+        with self.assertRaises(Exception):
+            qux(-1.0)
+        with self.assertRaises(Exception):
+            qux('Hello world!')
