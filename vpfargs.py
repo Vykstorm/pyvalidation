@@ -12,7 +12,10 @@ from src.validators import number, Number
 # REGEX validators
 from src.validators import matchregex, fullmatchregex
 
-# Other validators
+# Numpy validators
+from src.validators import array, Array
+
+# Misc validators
 from src.validators import iterable, hashable
 
 # Argument placeholder
