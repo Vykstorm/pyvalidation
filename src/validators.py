@@ -397,6 +397,14 @@ class NdarrayValidator(TypeValidator):
     This validator can only be used if numpy module is avaliable.
     '''
     def __init__(self, dtype=None, ndim=None, size=None, shape=None):
+        '''
+        Initializes this instance. If numpy module is not avaliable, this will raise an import error.
+        :param dtype: Is the expected dtype of the ndarray, must be a ninstance of class np.dtype or a subclass of np.generic
+        :param ndim: Is the expected dimensions of the ndarray. Must be an int >= 1
+        :param size: Number of total items expected on ndarray. Must be an int >= 0
+        :param shape: Expected shape of the ndarray. Must be a tuple or list of ints. Each dim size must be >= 1
+        This parameter cannot be used when indicating ndim neither size parameters.
+        '''
         import numpy as np
         from numpy import ndarray
 
