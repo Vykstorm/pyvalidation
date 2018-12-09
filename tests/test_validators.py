@@ -4,10 +4,10 @@ from functools import partial
 from itertools import chain
 from decimal import Decimal
 from enum import Enum, auto
-
+from math import floor, sqrt
 
 from src.decorators import validate
-from src.validators import TypeValidator
+from src.validators import TypeValidator, UserValidator
 from src.validators import matchregex, fullmatchregex, number
 from src.validators import Int, Float, Bool, Complex, Str, List, Tuple, Set, FrozenSet, Dict
 from src.exceptions import ValidationError
@@ -185,6 +185,56 @@ class TestValidators(TestCase):
             foo(12)
         with self.assertRaises(Exception):
             foo(False)
+
+
+        # Test disjunctive validators
+
+        @validate(Int | Float)
+        def bar(x):
+            self.assertIsInstance(x, (int, float))
+
+        bar(1)
+        bar(1.0)
+        with self.assertRaises(Exception):
+            bar(True)
+
+        # Test conjunctive validators
+
+        @validate(Int & UserValidator(lambda x: x % 2 == 0))
+        def baz(x):
+            self.assertIsInstance(x, int)
+            self.assertTrue(x % 2 == 0)
+
+        baz(0)
+        baz(2)
+        with self.assertRaises(Exception):
+            baz('Hello World')
+        with self.assertRaises(Exception):
+            baz(1)
+
+
+        # Test xor validators
+
+        @validate(UserValidator(lambda x: floor(sqrt(x))**2 == x) ^ UserValidator(lambda x: x % 2 == 0))
+        def foo(x):
+            self.assertTrue((floor(sqrt(x)) ** 2 == x) ^ (x % 2 == 0))
+
+        foo(9)
+        foo(10)
+        with self.assertRaises(Exception):
+            foo(4)
+        with self.assertRaises(Exception):
+            foo(11)
+
+        # Test inverted validators
+
+        @validate(~Str)
+        def qux(x):
+            self.assertNotIsInstance(x, str)
+
+        qux(1.0)
+        with self.assertRaises(Exception):
+            qux('Hello World')
 
 
     def test_empty_validator(self):
